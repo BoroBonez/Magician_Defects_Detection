@@ -10,8 +10,14 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
-    urdf= '/home/robotics/ros2_ws_magician/src/display_urdf/urdf/defects1.urdf'
-    rviz= '/home/robotics/ros2_ws_magician/src/display_urdf/rviz/rviz.rviz'
+    # Get the current script's directory
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # Obtain the parent directory of the script directory
+    src_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(script_directory)))))
+
+    urdf = os.path.join(src_dir, 'src/display_urdf/urdf/defects1.urdf')
+    rviz = os.path.join(src_dir, 'src/display_urdf/rviz/rviz.rviz')
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
 
