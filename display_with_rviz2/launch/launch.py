@@ -16,8 +16,8 @@ def generate_launch_description():
     # Obtain the parent directory of the script directory
     src_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(script_directory)))))
 
-    urdf = os.path.join(src_dir, 'src/display_urdf/urdf/defects1.urdf')
-    rviz = os.path.join(src_dir, 'src/display_urdf/rviz/rviz.rviz')
+    urdf = os.path.join(src_dir, 'src/display_with_rviz2/urdf/defects1.urdf')
+    rviz = os.path.join(src_dir, 'src/display_with_rviz2/rviz/rviz.rviz')
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
 
