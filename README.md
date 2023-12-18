@@ -1,1 +1,1 @@
-# Magician_Defects_Detection
+# Magician Defects Detection
