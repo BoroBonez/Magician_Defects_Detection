@@ -28,10 +28,6 @@ def generate_launch_description():
             'use_sim_time',
             default_value='false',
             description='Use simulation (Gazebo) clock if true'),
-        ExecuteProcess(
-            #cmd=['ros2', 'launch', 'zed_wrapper', 'zed_camera.launch.py', 'camera_model:=zed2'],
-            cmd = ['ros2', 'launch', 'realsense2_camera', 'rs_launch.py',  'depth_module.profile:=1280x720x30', 'pointcloud.enable:=true'],
-            output='screen',),
         Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',

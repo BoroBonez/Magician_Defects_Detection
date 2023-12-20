@@ -21,15 +21,15 @@ private:
       geometry_msgs::msg::TransformStamped transform_stamped;
       transform_stamped.header = msg->header;
       transform_stamped.header.frame_id = "map";
-      transform_stamped.child_frame_id = "camera_link"; 
+      transform_stamped.child_frame_id = "camera_depth_optical_frame"; 
       
       // Original pose
         //translation
       Eigen::Vector3d original_position(0, 0, 0);
         //rotation
       Eigen::Affine3d original_rotation = Eigen::Affine3d::Identity();
-      original_rotation *= Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitZ())
-                        *  Eigen::AngleAxisd(0, Eigen::Vector3d::UnitY())
+      original_rotation *= Eigen::AngleAxisd(-M_PI/2, Eigen::Vector3d::UnitY())
+                        *  Eigen::AngleAxisd(+M_PI/2, Eigen::Vector3d::UnitZ())
                         *  Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX());
       Eigen::Quaterniond original_orientation_q( Eigen::Quaterniond(original_rotation.rotation()) );
 
@@ -37,14 +37,12 @@ private:
       Eigen::Affine3d transform = Eigen::Affine3d::Identity();
         //translation
       Eigen::Vector3d translation(msg->pose.position.z, msg->pose.position.x, msg->pose.position.y);
-      transform.translate(translation);
         //rotation
-      Eigen::Quaterniond rotation(msg->pose.orientation.w, msg->pose.orientation.z, msg->pose.orientation.x, msg->pose.orientation.y);
-      transform.rotate(rotation);
+      Eigen::Quaterniond rotation(msg->pose.orientation.w, msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z);
 
       // Apply the transformation to the original pose
-      Eigen::Vector3d transformed_position = transform * original_position;
-      Eigen::Quaterniond transformed_orientation( (transform.rotate(original_orientation_q)).rotation() );
+      Eigen::Vector3d transformed_position = ((transform.translate(original_position)).translate(translation)).translation();
+      Eigen::Quaterniond transformed_orientation( ((transform.rotate(original_orientation_q)).rotate(rotation)).rotation() );
 
 
       // Fill in the transformed pose

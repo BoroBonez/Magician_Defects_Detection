@@ -25,7 +25,7 @@ private:
       
       // Original pose
         //translation
-      Eigen::Vector3d original_position(0, 0.148, 0);
+      Eigen::Vector3d original_position(0, 0.148, 0.02);
         //rotation
       Eigen::Affine3d original_rotation = Eigen::Affine3d::Identity();
       original_rotation *= Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitY())
@@ -37,14 +37,14 @@ private:
       Eigen::Affine3d transform = Eigen::Affine3d::Identity();
         //translation
       Eigen::Vector3d translation(msg->pose.position.z, msg->pose.position.x, msg->pose.position.y);
-      transform.translate(translation);
         //rotation
       Eigen::Quaterniond rotation(msg->pose.orientation.w, msg->pose.orientation.z, msg->pose.orientation.x, msg->pose.orientation.y);
-      transform.rotate(rotation);
 
       // Apply the transformation to the original pose
-      Eigen::Vector3d transformed_position = transform * original_position;
-      Eigen::Quaterniond transformed_orientation( (transform.rotate(original_orientation_q)).rotation() );
+      Eigen::Vector3d transformed_position = ((transform.translate(original_position)).translate(translation)).translation();
+      Eigen::Quaterniond transformed_orientation( ((transform.rotate(original_orientation_q)).rotate(rotation)).rotation() );
+      //Eigen::Vector3d transformed_position = ((transform.translate(original_position))).translation();
+      //Eigen::Quaterniond transformed_orientation( ((transform.rotate(original_orientation_q))).rotation() );
 
 
       // Fill in the transformed pose
