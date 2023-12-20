@@ -21,8 +21,6 @@ def generate_launch_description():
     with open(urdf, 'r') as infp:
         robot_desc = infp.read()
 
-    socat_command = "socat UDP4-RECV:1511,bind=239.255.42.99,ip-add-membership=239.255.42.99:enp3s0,reuseaddr - | hexdump"
-
     return LaunchDescription([
         DeclareLaunchArgument(
             'use_sim_time',

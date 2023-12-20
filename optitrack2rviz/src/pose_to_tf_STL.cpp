@@ -46,7 +46,6 @@ private:
       //Eigen::Vector3d transformed_position = ((transform.translate(original_position))).translation();
       //Eigen::Quaterniond transformed_orientation( ((transform.rotate(original_orientation_q))).rotation() );
 
-
       // Fill in the transformed pose
       transform_stamped.transform.translation.x = transformed_position.x();
       transform_stamped.transform.translation.y = transformed_position.y();
