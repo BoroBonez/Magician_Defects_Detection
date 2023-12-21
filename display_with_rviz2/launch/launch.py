@@ -66,12 +66,13 @@ def generate_launch_description():
             name='pose_to_tf_camera',
             output='screen',
         ),
-        Node(
-            package='computing_point_cloud',
-            executable='point_cloud_sub',
-            name='transform_pc',
-            output='screen',
-        ),
+        #comment in case the zed camera is not used
+        #Node(
+        #    package='computing_point_cloud',
+        #    executable='point_cloud_sub',
+        #    name='transform_pc',
+        #    output='screen',
+        #),
         Node(
             package='rviz2',
             executable='rviz2',

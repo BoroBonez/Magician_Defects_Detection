@@ -35,6 +35,20 @@ def generate_launch_description():
             arguments=[urdf]),
         Node(
             package='optitrack2rviz',
+            executable='kalman_filter',
+            name='kalman_filter_STL',
+            output='screen',
+            parameters=[{'input_pose_topic': '/optiTrack/poseSTL'}, {'output_pose_topic': '/kalman_filter/poseSTL'}],
+        ),
+        Node(
+            package='optitrack2rviz',
+            executable='kalman_filter',
+            name='kalman_filter_camera',
+            output='screen',
+            parameters=[{'input_pose_topic': '/optiTrack/camera'}, {'output_pose_topic': '/kalman_filter/camera'}],
+        ),
+        Node(
+            package='optitrack2rviz',
             executable='pose_to_tf_STL',
             name='pose_to_tf_STL',
             output='screen',
@@ -45,12 +59,13 @@ def generate_launch_description():
             name='pose_to_tf_camera',
             output='screen',
         ),
-        Node(
-            package='computing_point_cloud',
-            executable='point_cloud_sub',
-            name='transform_pc',
-            output='screen',
-        ),
+        #comment in case the zed camera is not used
+        #Node(
+        #    package='computing_point_cloud',
+        #    executable='point_cloud_sub',
+        #    name='transform_pc',
+        #    output='screen',
+        #),
         Node(
             package='rviz2',
             executable='rviz2',

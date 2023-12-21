@@ -10,7 +10,7 @@ public:
   PoseToTFNode() : Node("pose_to_tf_STL") {
     // Subscriber
     pose_subscriber_ = create_subscription<geometry_msgs::msg::PoseStamped>(
-    "/optiTrack/poseSTL", rclcpp::SensorDataQoS(), std::bind(&PoseToTFNode::poseCallback, this, std::placeholders::_1));
+    "/kalman_filter/poseSTL", rclcpp::SensorDataQoS(), std::bind(&PoseToTFNode::poseCallback, this, std::placeholders::_1));
 
 
   }

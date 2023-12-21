@@ -10,7 +10,7 @@ public:
   PoseToTFNode() : Node("pose_to_tf_camera") {
     // Subscriber
     pose_subscriber_ = create_subscription<geometry_msgs::msg::PoseStamped>(
-    "/optiTrack/camera", rclcpp::SensorDataQoS(), std::bind(&PoseToTFNode::poseCallback, this, std::placeholders::_1));
+    "/kalman_filter/camera", rclcpp::SensorDataQoS(), std::bind(&PoseToTFNode::poseCallback, this, std::placeholders::_1));
 
 
   }
