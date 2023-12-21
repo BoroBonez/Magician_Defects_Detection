@@ -94,7 +94,7 @@ private:
     pose_stamped_msg->pose.orientation.y = state_estimated(6);
     pose_stamped_msg->pose.orientation.z = state_estimated(7);
 
-    std::cout << "\nthe norm is: "<< std::sqrt( std::pow(msg->pose.orientation.w, 2) + std::pow(msg->pose.orientation.x, 2) + std::pow(msg->pose.orientation.y, 2) + std::pow(msg->pose.orientation.z, 2) ) << std::endl;
+    //std::cout << "\nthe norm is: "<< std::sqrt( std::pow(msg->pose.orientation.w, 2) + std::pow(msg->pose.orientation.x, 2) + std::pow(msg->pose.orientation.y, 2) + std::pow(msg->pose.orientation.z, 2) ) << std::endl;
     //std::cout << "\nthe quaternion is: " << state_estimated << std::endl;
 
     // Publish the PoseStamped message

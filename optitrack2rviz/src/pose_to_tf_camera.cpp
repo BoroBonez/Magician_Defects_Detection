@@ -8,10 +8,12 @@
 class PoseToTFNode : public rclcpp::Node {
 public:
   PoseToTFNode() : Node("pose_to_tf_camera") {
+
+    this->declare_parameter<std::string>("input_pose_topic", "/kalman_filter/camera");
+    auto topic_param_output = this->get_parameter("input_pose_topic").as_string();
     // Subscriber
     pose_subscriber_ = create_subscription<geometry_msgs::msg::PoseStamped>(
-    "/kalman_filter/camera", rclcpp::SensorDataQoS(), std::bind(&PoseToTFNode::poseCallback, this, std::placeholders::_1));
-
+    topic_param_output, rclcpp::SensorDataQoS(), std::bind(&PoseToTFNode::poseCallback, this, std::placeholders::_1));
 
   }
 
