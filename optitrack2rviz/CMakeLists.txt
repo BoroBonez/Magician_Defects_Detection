@@ -14,10 +14,12 @@ find_package(tf2_ros REQUIRED)
 add_executable(pose_to_tf_STL src/pose_to_tf_STL.cpp)
 add_executable(pose_to_tf_camera src/pose_to_tf_camera.cpp)
 add_executable(kalman_filter src/kalman_filter.cpp)
+add_executable(average_quaternions src/average_quaternions.cpp)
 
 ament_target_dependencies(pose_to_tf_STL rclcpp std_msgs geometry_msgs tf2_ros)
 ament_target_dependencies(pose_to_tf_camera rclcpp std_msgs geometry_msgs tf2_ros)
 ament_target_dependencies(kalman_filter rclcpp std_msgs geometry_msgs tf2_ros)
+ament_target_dependencies(average_quaternions rclcpp std_msgs geometry_msgs tf2_ros)
 
 # Manually set Eigen include directories
 set(Eigen3_INCLUDE_DIRS /usr/include/eigen3)  # Adjust the path based on your Eigen3 installation
@@ -26,11 +28,13 @@ set(Eigen3_INCLUDE_DIRS /usr/include/eigen3)  # Adjust the path based on your Ei
 target_include_directories(pose_to_tf_STL PRIVATE ${Eigen3_INCLUDE_DIRS})
 target_include_directories(pose_to_tf_camera PRIVATE ${Eigen3_INCLUDE_DIRS})
 target_include_directories(kalman_filter PRIVATE ${Eigen3_INCLUDE_DIRS})
+target_include_directories(average_quaternions PRIVATE ${Eigen3_INCLUDE_DIRS})
 
 install(TARGETS
   pose_to_tf_STL
   pose_to_tf_camera
   kalman_filter
+  average_quaternions
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
