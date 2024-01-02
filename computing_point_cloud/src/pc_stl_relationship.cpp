@@ -25,105 +25,48 @@ public:
     Pc_stl_relationship()
         : Node("pc_stl_relationship")
     {
-        subscription_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
+        subscription_camera_PC = this->create_subscription<sensor_msgs::msg::PointCloud2>(
             "/new_point_cloud", 10, bind(&Pc_stl_relationship::topic_callback, this, _1));
-        pose_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-            "/optiTrack/poseSTL", rclcpp::SensorDataQoS(), bind(&Pc_stl_relationship::poseCallback, this, _1));
+        subscription_STL_PC = this->create_subscription<sensor_msgs::msg::PointCloud2>(
+            "/STL_point_cloud", 10, bind(&Pc_stl_relationship::STLCallback, this, _1));
 
         publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/augmented_point_cloud", 10);
-        publisher_STL = this->create_publisher<sensor_msgs::msg::PointCloud2>("/STL_point_cloud", 10);
-
-
-        this->declare_parameter<double>("angle_x", 0.0);
-        this->declare_parameter<double>("angle_y", 0.0);
-        this->declare_parameter<double>("angle_z", 0.0);
-
-        this->declare_parameter<double>("x", -0.9);
-        this->declare_parameter<double>("y", 0.7);
-        this->declare_parameter<double>("z", 0.95);
-
     }
 
 private:
     void topic_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
     {
-        
-        if (!current_pose_received_)
+        if (!current_STL)
         {
-            RCLCPP_WARN(get_logger(), "Pose not received yet. Skipping point cloud processing.");
+            RCLCPP_WARN(get_logger(), "STL_PC not received yet. Skipping point cloud processing.");
             return;
         }
-
-        //extracting point cloud message
+        else if (
+                 msg->header.stamp.sec < STL->header.stamp.sec ||
+                (msg->header.stamp.sec == STL->header.stamp.sec && msg->header.stamp.nanosec < STL->header.stamp.nanosec)
+                )
+        {
+            RCLCPP_WARN(get_logger(), "camera point cloud has a lower stamp than STL point cloud");
+            //std::cout << "\nCAMERA sec: " << msg->header.stamp.sec << "\nSTL sec: " << STL->header.stamp.sec << std::endl;
+            return;
+        }
+        //extracting camera point cloud
         pcl::PCLPointCloud2 pcl_pc2;
         pcl_conversions::toPCL(*msg, pcl_pc2);
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudPC(new pcl::PointCloud<pcl::PointXYZRGB>);
         pcl::fromPCLPointCloud2(pcl_pc2, *cloudPC);
 
-        // Extract vertices from the STL mesh
-        pcl::PolygonMesh stl_mesh;
-        pcl::io::loadPolygonFileSTL("/home/robotics/ros2_ws_magician/src/display_urdf/stl/mattonella1.stl", stl_mesh);
+        //extracting STL point cloud
+        pcl_conversions::toPCL(*STL, pcl_pc2);
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudSTL(new pcl::PointCloud<pcl::PointXYZRGB>);
-        pcl::fromPCLPointCloud2(stl_mesh.cloud, *cloudSTL);
-        scalePointCloud(cloudSTL, 0.001);
-
-
-        //check the values of defects1.urdf
-        double roll;
-        double pitch;  
-        double yaw;      
-        double x_translation;
-        double y_translation;
-        double z_translation; 
-
-        this->get_parameter("angle_x", roll);
-        this->get_parameter("angle_y", pitch);
-        this->get_parameter("angle_z", yaw);
-        this->get_parameter("x", x_translation);
-        this->get_parameter("y", y_translation);
-        this->get_parameter("z", z_translation);
-
-        Eigen::Affine3d transform = Eigen::Affine3d::Identity();
-        //static rotation 
-        transform *= Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ())
-                        * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY())
-                        * Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX());
-        Eigen::Vector3d translation(x_translation,
-                                    y_translation,
-                                    z_translation);
-
-        //static translation
-        transform.translate(translation);
-
-        //dynamic
-        Eigen::Quaterniond rotation(current_pose_.pose.orientation.w,
-                                    current_pose_.pose.orientation.x,
-                                    current_pose_.pose.orientation.y,
-                                    current_pose_.pose.orientation.z);
-        translation.x() = current_pose_.pose.position.x;
-        translation.y() = current_pose_.pose.position.y;
-        translation.z() = current_pose_.pose.position.z;
-        
-        transform.translate(translation);
-        transform.rotate(rotation);
-
-        pcl::transformPointCloud(*cloudSTL, *cloudSTL, transform);
-
-        // display STL
-        pcl::toPCLPointCloud2(*cloudSTL, pcl_pc2);
-        auto new_point_cloud_msg_STL = std::make_shared<sensor_msgs::msg::PointCloud2>();
-        pcl_conversions::fromPCL(pcl_pc2, *new_point_cloud_msg_STL);
-
-        new_point_cloud_msg_STL->header = msg->header;
-
-        publisher_STL->publish(*new_point_cloud_msg_STL);
+        pcl::fromPCLPointCloud2(pcl_pc2, *cloudSTL);
 
         //keep just the points in the desired region
         pcl::PointXYZRGB min_point, max_point;
         pcl::getMinMax3D(*cloudSTL, min_point, max_point);
 
         pcl::PassThrough<pcl::PointXYZRGB> pass;
-        float step = 0.0;
+        float step = 0.01;
 
         pass.setInputCloud(cloudPC);
         pass.setFilterFieldName("x");
@@ -141,9 +84,9 @@ private:
         pass.filter(*cloudPC);
 
         
-        // Compute distance
+        // Compute distance and replace each point of cloudSTL with the closest point of cloudPC
         for (std::size_t i = 0; i < cloudSTL->points.size(); ++i) {
-            cloudSTL->points[i] = min_distance_point_p_pc(cloudSTL->points[i], cloudPC);
+           cloudSTL->points[i] = min_distance_point_p_pc(cloudSTL->points[i], cloudPC);
         }
         
         // Convert back to PointCloud2
@@ -154,20 +97,16 @@ private:
         new_point_cloud_msg->header = msg->header;
 
         publisher_->publish(*new_point_cloud_msg);
+        //finishing to process the old STL point cloud
+        current_STL = false;
 
     }
 
-    void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr pose_msg)
+    void STLCallback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
     {
-        current_pose_ = *pose_msg;
-        current_pose_received_ = true;
-    }
-
-    void scalePointCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, double scale_factor) {
-        for (size_t i = 0; i < cloud->points.size(); ++i) {
-            cloud->points[i].x *= scale_factor;
-            cloud->points[i].y *= scale_factor;
-            cloud->points[i].z *= scale_factor;
+        if (!current_STL){
+            STL = msg;
+            current_STL = true;
         }
     }
 
@@ -180,6 +119,7 @@ private:
 
         return diff_vector.norm();
     }
+
     //returns the closest point of the point cloud to point1
     pcl::PointXYZRGB min_distance_point_p_pc(pcl::PointXYZRGB point1, pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud){
         std::size_t min_d_point_position = 0;
@@ -207,12 +147,11 @@ private:
 
     }
 
-    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr subscription_;
-    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscription_;
+    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr subscription_STL_PC, subscription_camera_PC;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_STL;
-    geometry_msgs::msg::PoseStamped current_pose_;
-    bool current_pose_received_ = false;
+    sensor_msgs::msg::PointCloud2::SharedPtr STL;
+    bool current_STL = false;
 };
 
 int main(int argc, char *argv[])

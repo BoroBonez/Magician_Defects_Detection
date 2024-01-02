@@ -1,0 +1,23 @@
+[35m[1mConsolidate compiler generated dependencies of target stl_point_cloud[0m
+[ 33%] Built target point_cloud_sub
+[ 66%] Built target pc_stl_relationship
+[100%] Built target stl_point_cloud
+-- Install configuration: ""
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/point_cloud_sub
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/pc_stl_relationship
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/stl_point_cloud
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/ament_index/resource_index/package_run_dependencies/computing_point_cloud
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/ament_index/resource_index/parent_prefix_path/computing_point_cloud
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/ament_prefix_path.sh
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/ament_prefix_path.dsv
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/path.sh
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/path.dsv
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.bash
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.sh
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.zsh
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.dsv
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/package.dsv
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/ament_index/resource_index/packages/computing_point_cloud
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/cmake/computing_point_cloudConfig.cmake
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/cmake/computing_point_cloudConfig-version.cmake
+-- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/package.xml

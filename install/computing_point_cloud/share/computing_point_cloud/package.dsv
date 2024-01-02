@@ -1,0 +1,8 @@
+source;share/computing_point_cloud/hook/cmake_prefix_path.ps1
+source;share/computing_point_cloud/hook/cmake_prefix_path.dsv
+source;share/computing_point_cloud/hook/cmake_prefix_path.sh
+source;share/computing_point_cloud/local_setup.bash
+source;share/computing_point_cloud/local_setup.dsv
+source;share/computing_point_cloud/local_setup.ps1
+source;share/computing_point_cloud/local_setup.sh
+source;share/computing_point_cloud/local_setup.zsh

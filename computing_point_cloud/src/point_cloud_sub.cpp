@@ -19,7 +19,7 @@ public:
         subscription_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
             "/camera/camera/depth/color/points", 10, bind(&Point_cloud_sub::topic_callback, this, _1));
         pose_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-            "/optiTrack/camera", rclcpp::SensorDataQoS(), bind(&Point_cloud_sub::poseCallback, this, _1));
+            "/average_quaternions/camera", rclcpp::SensorDataQoS(), bind(&Point_cloud_sub::poseCallback, this, _1));
 
         publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/new_point_cloud", 10);
     }
@@ -38,17 +38,25 @@ private:
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
         pcl::fromPCLPointCloud2(pcl_pc2, *cloud);
 
-        Eigen::Quaterniond rotation(current_pose_.pose.orientation.w,
-                                    current_pose_.pose.orientation.x,
-                                    current_pose_.pose.orientation.y,
-                                    current_pose_.pose.orientation.z);
-        Eigen::Vector3d translation(current_pose_.pose.position.x,
-                                   current_pose_.pose.position.y,
-                                   current_pose_.pose.position.z);
-
+        // Original pose
+          //translation
+        Eigen::Vector3d original_position(0, 0, 0);
+          //rotation
+        Eigen::Affine3d original_rotation = Eigen::Affine3d::Identity();
+        original_rotation *= Eigen::AngleAxisd(-M_PI/2, Eigen::Vector3d::UnitY())
+                          *  Eigen::AngleAxisd(+M_PI/2, Eigen::Vector3d::UnitZ())
+                          *  Eigen::AngleAxisd(0, Eigen::Vector3d::UnitX());
+        Eigen::Quaterniond original_orientation_q( Eigen::Quaterniond(original_rotation.rotation()) );
+  
+        // Define your transformation matrix
         Eigen::Affine3d transform = Eigen::Affine3d::Identity();
-        transform.translate(translation);
-        transform.rotate(rotation);
+          //translation
+        Eigen::Vector3d translation(current_pose_->pose.position.z, current_pose_->pose.position.x, current_pose_->pose.position.y);
+          //rotation
+        Eigen::Quaterniond rotation(current_pose_->pose.orientation.w, current_pose_->pose.orientation.x, current_pose_->pose.orientation.y, current_pose_->pose.orientation.z);
+        // Apply the transformation to the original pose
+        ((transform.translate(original_position)).translate(translation));
+        ((transform.rotate(original_orientation_q)).rotate(rotation));
 
         pcl::transformPointCloud(*cloud, *cloud, transform);
 
@@ -58,20 +66,26 @@ private:
         pcl_conversions::fromPCL(pcl_pc2, *new_point_cloud_msg);
 
         new_point_cloud_msg->header = msg->header;
+        new_point_cloud_msg->header.frame_id = "map";
 
         publisher_->publish(*new_point_cloud_msg);
+
+        //finishing to compute the previous pose
+        current_pose_received_ = false;
     }
 
     void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr pose_msg)
     {
-        current_pose_ = *pose_msg;
-        current_pose_received_ = true;
+        if (!current_pose_received_){
+            current_pose_ = pose_msg;
+            current_pose_received_ = true;
+        }
     }
 
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr subscription_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscription_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
-    geometry_msgs::msg::PoseStamped current_pose_;
+    geometry_msgs::msg::PoseStamped::SharedPtr current_pose_;
     bool current_pose_received_ = false;
 };
 

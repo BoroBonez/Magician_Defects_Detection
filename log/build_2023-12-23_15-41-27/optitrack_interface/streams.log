@@ -1,0 +1,23 @@
+[0.907s] Invoking command in '/home/matteo/ros2_ws_git/src/optitrack_interface': PYTHONPATH=/home/matteo/ros2_ws_git/src/build/optitrack_interface/prefix_override:/home/matteo/ros2_ws_git/src/install/optitrack_interface/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/optitrack_interface build --build-base /home/matteo/ros2_ws_git/src/build/optitrack_interface/build install --record /home/matteo/ros2_ws_git/src/build/optitrack_interface/install.log --single-version-externally-managed
+[1.100s] running egg_info
+[1.102s] writing ../build/optitrack_interface/optitrack_interface.egg-info/PKG-INFO
+[1.103s] writing dependency_links to ../build/optitrack_interface/optitrack_interface.egg-info/dependency_links.txt
+[1.103s] writing entry points to ../build/optitrack_interface/optitrack_interface.egg-info/entry_points.txt
+[1.104s] writing requirements to ../build/optitrack_interface/optitrack_interface.egg-info/requires.txt
+[1.105s] writing top-level names to ../build/optitrack_interface/optitrack_interface.egg-info/top_level.txt
+[1.105s] reading manifest file '../build/optitrack_interface/optitrack_interface.egg-info/SOURCES.txt'
+[1.106s] writing manifest file '../build/optitrack_interface/optitrack_interface.egg-info/SOURCES.txt'
+[1.107s] running build
+[1.107s] running build_py
+[1.108s] running install
+[1.108s] /usr/lib/python3/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[1.108s]   warnings.warn(
+[1.108s] running install_lib
+[1.109s] running install_data
+[1.109s] running install_egg_info
+[1.109s] removing '/home/matteo/ros2_ws_git/src/install/optitrack_interface/lib/python3.10/site-packages/optitrack_interface-0.0.0-py3.10.egg-info' (and everything under it)
+[1.110s] Copying ../build/optitrack_interface/optitrack_interface.egg-info to /home/matteo/ros2_ws_git/src/install/optitrack_interface/lib/python3.10/site-packages/optitrack_interface-0.0.0-py3.10.egg-info
+[1.110s] running install_scripts
+[1.129s] Installing optitrack script to /home/matteo/ros2_ws_git/src/install/optitrack_interface/lib/optitrack_interface
+[1.130s] writing list of installed files to '/home/matteo/ros2_ws_git/src/build/optitrack_interface/install.log'
+[1.204s] Invoked command in '/home/matteo/ros2_ws_git/src/optitrack_interface' returned '0': PYTHONPATH=/home/matteo/ros2_ws_git/src/build/optitrack_interface/prefix_override:/home/matteo/ros2_ws_git/src/install/optitrack_interface/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../build/optitrack_interface build --build-base /home/matteo/ros2_ws_git/src/build/optitrack_interface/build install --record /home/matteo/ros2_ws_git/src/build/optitrack_interface/install.log --single-version-externally-managed

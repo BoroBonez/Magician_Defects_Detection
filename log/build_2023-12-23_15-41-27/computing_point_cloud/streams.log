@@ -1,0 +1,27 @@
+[0.183s] Invoking command in '/home/matteo/ros2_ws_git/src/build/computing_point_cloud': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --build /home/matteo/ros2_ws_git/src/build/computing_point_cloud -- -j12 -l12
+[0.269s] [35m[1mConsolidate compiler generated dependencies of target stl_point_cloud[0m
+[0.282s] [ 33%] Built target point_cloud_sub
+[0.287s] [ 66%] Built target pc_stl_relationship
+[0.323s] [100%] Built target stl_point_cloud
+[0.577s] Invoked command in '/home/matteo/ros2_ws_git/src/build/computing_point_cloud' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --build /home/matteo/ros2_ws_git/src/build/computing_point_cloud -- -j12 -l12
+[0.630s] Invoking command in '/home/matteo/ros2_ws_git/src/build/computing_point_cloud': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --install /home/matteo/ros2_ws_git/src/build/computing_point_cloud
+[0.633s] -- Install configuration: ""
+[0.634s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/point_cloud_sub
+[0.634s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/pc_stl_relationship
+[0.634s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/stl_point_cloud
+[0.635s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/ament_index/resource_index/package_run_dependencies/computing_point_cloud
+[0.635s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/ament_index/resource_index/parent_prefix_path/computing_point_cloud
+[0.635s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/ament_prefix_path.sh
+[0.636s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/ament_prefix_path.dsv
+[0.636s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/path.sh
+[0.636s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/path.dsv
+[0.636s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.bash
+[0.636s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.sh
+[0.637s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.zsh
+[0.637s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.dsv
+[0.637s] -- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/package.dsv
+[0.637s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/ament_index/resource_index/packages/computing_point_cloud
+[0.638s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/cmake/computing_point_cloudConfig.cmake
+[0.638s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/cmake/computing_point_cloudConfig-version.cmake
+[0.638s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/package.xml
+[0.738s] Invoked command in '/home/matteo/ros2_ws_git/src/build/computing_point_cloud' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --install /home/matteo/ros2_ws_git/src/build/computing_point_cloud

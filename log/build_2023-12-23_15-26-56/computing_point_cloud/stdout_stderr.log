@@ -1,0 +1,30 @@
+[35m[1mConsolidate compiler generated dependencies of target stl_point_cloud[0m
+[35m[1mConsolidate compiler generated dependencies of target point_cloud_sub[0m
+[35m[1mConsolidate compiler generated dependencies of target pc_stl_relationship[0m
+[ 33%] Built target pc_stl_relationship
+[ 66%] Built target point_cloud_sub
+[ 83%] [32mBuilding CXX object CMakeFiles/stl_point_cloud.dir/src/stl_point_cloud.cpp.o[0m
+[100%] [32m[1mLinking CXX executable stl_point_cloud[0m
+[100%] Built target stl_point_cloud
+-- Install configuration: ""
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/point_cloud_sub
+-- Set runtime path of "/home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/point_cloud_sub" to ""
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/pc_stl_relationship
+-- Set runtime path of "/home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/pc_stl_relationship" to ""
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/stl_point_cloud
+-- Set runtime path of "/home/matteo/ros2_ws_git/src/install/computing_point_cloud/lib/computing_point_cloud/stl_point_cloud" to ""
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/ament_index/resource_index/package_run_dependencies/computing_point_cloud
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/ament_index/resource_index/parent_prefix_path/computing_point_cloud
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/ament_prefix_path.sh
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/ament_prefix_path.dsv
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/path.sh
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/environment/path.dsv
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.bash
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.sh
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.zsh
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/local_setup.dsv
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/package.dsv
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/ament_index/resource_index/packages/computing_point_cloud
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/cmake/computing_point_cloudConfig.cmake
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/cmake/computing_point_cloudConfig-version.cmake
+-- Installing: /home/matteo/ros2_ws_git/src/install/computing_point_cloud/share/computing_point_cloud/package.xml

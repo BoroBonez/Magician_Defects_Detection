@@ -1,0 +1,18 @@
+[0m** WARNING ** io features related to pcap will be disabled[0m
+[01m[K/home/matteo/ros2_ws_git/src/computing_point_cloud/src/pc_stl_relationship.cpp:[m[K In member function ‘[01m[Kdouble Pc_stl_relationship::pS(pcl::PointCloud<pcl::PointXYZRGB>::Ptr, pcl::PointXYZRGB)[m[K’:
+[01m[K/home/matteo/ros2_ws_git/src/computing_point_cloud/src/pc_stl_relationship.cpp:208:5:[m[K [01;35m[Kwarning: [m[Kno return statement in function returning non-void [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wreturn-type-Wreturn-type]8;;[m[K]
+  208 |     [01;35m[K}[m[K
+      |     [01;35m[K^[m[K
+[01m[K/home/matteo/ros2_ws_git/src/computing_point_cloud/src/pc_stl_relationship.cpp:206:54:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kcloud[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-parameter-Wunused-parameter]8;;[m[K]
+  206 |     double pS([01;35m[Kpcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud[m[K, pcl::PointXYZRGB point){
+      |               [01;35m[K~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~[m[K
+[01m[K/home/matteo/ros2_ws_git/src/computing_point_cloud/src/pc_stl_relationship.cpp:206:78:[m[K [01;35m[Kwarning: [m[Kunused parameter ‘[01m[Kpoint[m[K’ [[01;35m[K]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wunused-parameter-Wunused-parameter]8;;[m[K]
+  206 |     double pS(pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud, [01;35m[Kpcl::PointXYZRGB point[m[K){
+      |                                                             [01;35m[K~~~~~~~~~~~~~~~~~^~~~~[m[K
+[01m[K/home/matteo/ros2_ws_git/src/computing_point_cloud/src/stl_point_cloud.cpp:116:79:[m[K [01;31m[Kerror: [m[K‘[01m[Kù[m[K’ does not name a type
+  116 |     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_STL;[01;31m[Kù[m[K
+      |                                                                               [01;31m[K^[m[K
+gmake[2]: *** [CMakeFiles/stl_point_cloud.dir/build.make:76: CMakeFiles/stl_point_cloud.dir/src/stl_point_cloud.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:193: CMakeFiles/stl_point_cloud.dir/all] Error 2
+gmake[1]: *** Waiting for unfinished jobs....
+gmake: *** [Makefile:146: all] Error 2

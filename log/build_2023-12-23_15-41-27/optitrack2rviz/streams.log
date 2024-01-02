@@ -1,0 +1,28 @@
+[0.113s] Invoking command in '/home/matteo/ros2_ws_git/src/build/optitrack2rviz': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --build /home/matteo/ros2_ws_git/src/build/optitrack2rviz -- -j12 -l12
+[0.173s] [ 25%] Built target average_quaternions
+[0.181s] [ 50%] Built target pose_to_tf_camera
+[0.183s] [ 75%] Built target kalman_filter
+[0.185s] [100%] Built target pose_to_tf_STL
+[0.498s] Invoked command in '/home/matteo/ros2_ws_git/src/build/optitrack2rviz' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --build /home/matteo/ros2_ws_git/src/build/optitrack2rviz -- -j12 -l12
+[0.553s] Invoking command in '/home/matteo/ros2_ws_git/src/build/optitrack2rviz': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --install /home/matteo/ros2_ws_git/src/build/optitrack2rviz
+[0.561s] -- Install configuration: ""
+[0.561s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/lib/optitrack2rviz/pose_to_tf_STL
+[0.561s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/lib/optitrack2rviz/pose_to_tf_camera
+[0.561s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/lib/optitrack2rviz/kalman_filter
+[0.562s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/lib/optitrack2rviz/average_quaternions
+[0.562s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/ament_index/resource_index/package_run_dependencies/optitrack2rviz
+[0.563s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/ament_index/resource_index/parent_prefix_path/optitrack2rviz
+[0.563s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/environment/ament_prefix_path.sh
+[0.563s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/environment/ament_prefix_path.dsv
+[0.563s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/environment/path.sh
+[0.563s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/environment/path.dsv
+[0.564s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/local_setup.bash
+[0.564s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/local_setup.sh
+[0.564s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/local_setup.zsh
+[0.564s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/local_setup.dsv
+[0.564s] -- Installing: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/package.dsv
+[0.565s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/ament_index/resource_index/packages/optitrack2rviz
+[0.565s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/cmake/optitrack2rvizConfig.cmake
+[0.565s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/cmake/optitrack2rvizConfig-version.cmake
+[0.565s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/optitrack2rviz/share/optitrack2rviz/package.xml
+[0.608s] Invoked command in '/home/matteo/ros2_ws_git/src/build/optitrack2rviz' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --install /home/matteo/ros2_ws_git/src/build/optitrack2rviz

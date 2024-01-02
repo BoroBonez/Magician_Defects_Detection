@@ -1,0 +1,25 @@
+[0.171s] Invoking command in '/home/matteo/ros2_ws_git/src/build/display_with_rviz2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --build /home/matteo/ros2_ws_git/src/build/display_with_rviz2 -- -j12 -l12
+[0.618s] Invoked command in '/home/matteo/ros2_ws_git/src/build/display_with_rviz2' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --build /home/matteo/ros2_ws_git/src/build/display_with_rviz2 -- -j12 -l12
+[0.655s] Invoking command in '/home/matteo/ros2_ws_git/src/build/display_with_rviz2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --install /home/matteo/ros2_ws_git/src/build/display_with_rviz2
+[0.667s] -- Install configuration: ""
+[0.667s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/launch
+[0.667s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/launch/launch_with_rosbag.py
+[0.667s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/launch/launch_average_q.py
+[0.668s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/launch/launch.py
+[0.668s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/launch/launch_without_kalman.py
+[0.668s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/ament_index/resource_index/package_run_dependencies/display_with_rviz2
+[0.668s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/ament_index/resource_index/parent_prefix_path/display_with_rviz2
+[0.668s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/environment/ament_prefix_path.sh
+[0.668s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/environment/ament_prefix_path.dsv
+[0.668s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/environment/path.sh
+[0.669s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/environment/path.dsv
+[0.669s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/local_setup.bash
+[0.669s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/local_setup.sh
+[0.669s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/local_setup.zsh
+[0.669s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/local_setup.dsv
+[0.670s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/package.dsv
+[0.670s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/ament_index/resource_index/packages/display_with_rviz2
+[0.671s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/cmake/display_with_rviz2Config.cmake
+[0.671s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/cmake/display_with_rviz2Config-version.cmake
+[0.671s] -- Up-to-date: /home/matteo/ros2_ws_git/src/install/display_with_rviz2/share/display_with_rviz2/package.xml
+[0.671s] Invoked command in '/home/matteo/ros2_ws_git/src/build/display_with_rviz2' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/home/matteo/ros2_ws_git/install/optitrack_interface:/opt/ros/humble /usr/bin/cmake --install /home/matteo/ros2_ws_git/src/build/display_with_rviz2

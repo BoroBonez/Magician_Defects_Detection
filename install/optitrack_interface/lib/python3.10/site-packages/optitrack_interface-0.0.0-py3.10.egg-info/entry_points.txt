@@ -1,0 +1,3 @@
+[console_scripts]
+optitrack = optitrack_interface.optitrack:main
+
