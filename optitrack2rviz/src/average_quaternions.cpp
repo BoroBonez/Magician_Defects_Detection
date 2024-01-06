@@ -9,7 +9,7 @@ class Average_quaternions : public rclcpp::Node {
 public:
   Average_quaternions() : Node("average_quaternions") {
     
-    this->declare_parameter<int>("n", 1);
+    this->declare_parameter<int>("n", 0);
     
     this->declare_parameter<std::string>("input_pose_topic", "/default/average_pose");
     auto topic_param_input = this->get_parameter("input_pose_topic").as_string();
@@ -34,7 +34,7 @@ private:
     // initialization
     n = this->get_parameter("n").as_int();
     new_quaternion << msg->pose.orientation.w, msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z;
-    if (n == 1){
+    if (n == 0){
       average_quaternion << msg->pose.orientation.w, msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z;
     }
 

@@ -14,6 +14,10 @@ find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
 find_package(pcl_conversions REQUIRED)
 
+include_directories(
+  ${std_msgs_INCLUDE_DIRS}
+)
+
 # point_cloud_sub
 add_executable(point_cloud_sub src/point_cloud_sub.cpp)
 ament_target_dependencies(point_cloud_sub rclcpp std_msgs sensor_msgs pcl_conversions)
@@ -44,8 +48,18 @@ target_include_directories(stl_point_cloud PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_compile_features(stl_point_cloud PUBLIC cxx_std_17)
 
+# hough_transform
+add_executable(hough_transform src/hough_transform.cpp)
+ament_target_dependencies(hough_transform rclcpp std_msgs sensor_msgs pcl_conversions)
+
+target_link_libraries(hough_transform ${PCL_LIBRARIES}) 
+target_include_directories(hough_transform PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(hough_transform PUBLIC cxx_std_17)
+
 #other
-install(TARGETS point_cloud_sub pc_stl_relationship stl_point_cloud
+install(TARGETS point_cloud_sub pc_stl_relationship stl_point_cloud hough_transform
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

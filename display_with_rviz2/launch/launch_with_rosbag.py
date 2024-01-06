@@ -80,6 +80,12 @@ def generate_launch_description():
             output='screen',
         ),
         Node(
+            package='computing_point_cloud',
+            executable='hough_transform',
+            name='hough_transform',
+            output='screen',
+        ),
+        Node(
             package='rviz2',
             executable='rviz2',
             name='rviz2',

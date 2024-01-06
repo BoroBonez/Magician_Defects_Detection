@@ -27,7 +27,7 @@ private:
       
       // Original pose
         //translation
-      Eigen::Vector3d original_position(0, 0.148, 0.02);
+      Eigen::Vector3d original_position(0.03, 0.1, 0.0);
         //rotation
       Eigen::Affine3d original_rotation = Eigen::Affine3d::Identity();
       original_rotation *= Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitY())

@@ -33,7 +33,8 @@ public:
             "/STL_point_cloud", 10, bind(&Pc_stl_relationship::STLCallback, this, _1));
 
         publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/augmented_point_cloud", 10);
-        publisher_with_probabilities = this->create_publisher<std_msgs::msg::Float32MultiArray>("/probabilities", 10);
+        publisher_HT = this->create_publisher<sensor_msgs::msg::PointCloud2>("/hough_transform", 10);
+        publisher_probabilities = this->create_publisher<std_msgs::msg::Float32MultiArray>("probabilities_topic", 10);
     }
 
 private:
@@ -95,11 +96,81 @@ private:
             augmentedcloud->points[i] = max_probability_point_p_pc(cloudSTL->points[i], cloudPC, probabilities);
             //cloudSTL->points.erase(cloudSTL->points.begin() + i);
         }
+        float mean = calculateMean(probabilities);
 
-        auto message = std_msgs::msg::Float32MultiArray();
-        message.data = probabilities;
-        publisher_with_probabilities->publish(message);
+        //Hough transform
+        float dx = 0.1, dy = 0.1, dz = 0.1;
+        float xHT = min_point.x, yHT = min_point.y, zHT = min_point.z;
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr HT(new pcl::PointCloud<pcl::PointXYZRGB>);
+        pcl::PointXYZRGB newPoint, oldPoint;
+        int index_x = static_cast<int>((max_point.x - min_point.x) / dx);
+        int index_y = static_cast<int>((max_point.y - min_point.y) / dy);
+        int index_z = static_cast<int>((max_point.z - min_point.z) / dz);
+        std::vector<std::vector<std::vector<int>>> count(index_x, std::vector<std::vector<int>>(index_y, std::vector<int>(index_z, 0)));
 
+        do {
+            do {
+                do {
+                    for (std::size_t i = 0; i < augmentedcloud->points.size(); ++i) {
+                        bool condition1 = (augmentedcloud->points[i].x > xHT) && (augmentedcloud->points[i].x < xHT + dx);
+                        bool condition2 = (augmentedcloud->points[i].y > yHT) && (augmentedcloud->points[i].y < yHT + dy);
+                        bool condition3 = (augmentedcloud->points[i].z > zHT) && (augmentedcloud->points[i].z < zHT + dz);
+                        
+                        if (condition1 && condition2 && condition3) {
+                            // in case the point is in the range of the parameter space, increase the counter
+                            int current_x = static_cast<int>((xHT - min_point.x) / dx);
+                            int current_y = static_cast<int>((yHT - min_point.y) / dy);
+                            int current_z = static_cast<int>((zHT - min_point.z) / dz);
+
+                            //oldPoint = newPoint;
+
+                            // bad point in case probabilities[i] - mean > 0
+                            if (probabilities[i] - mean > 0) {
+                                // yellow 255, 255, 0
+                                // from yellow to red
+                                newPoint.r = 255;
+                                newPoint.g = (1 - (probabilities[i] - mean) / mean) * 255;
+                                newPoint.b = 0;
+                            } else {
+                                // from yellow to green
+                                newPoint.r = (1 - (probabilities[i] - mean) / mean) * 255;
+                                newPoint.g = 255;
+                                newPoint.b = 0;
+                            }
+
+                            // moving average 
+/*                             newPoint.r = (count[current_x][current_y][current_z] * oldPoint.r + newPoint.r) /
+                                        (count[current_x][current_y][current_z] + 1);
+                            newPoint.g = (count[current_x][current_y][current_z] * oldPoint.g + newPoint.g) /
+                                        (count[current_x][current_y][current_z] + 1);
+                            count[current_x][current_y][current_z] += 1; */
+
+                            break;
+                        } else {
+                            newPoint.r = 255;
+                            newPoint.g = 255;
+                            newPoint.b = 255;
+                        }
+                    }
+                    
+                    newPoint.x = xHT;
+                    newPoint.y = yHT;
+                    newPoint.z = zHT;
+
+                    // Add the new point to the PointCloud
+                    HT->points.push_back(newPoint);
+
+                    zHT = zHT + dz;
+                } while (zHT <= max_point.z);
+                zHT = min_point.z;
+
+                yHT = yHT + dy;
+            } while (yHT <= max_point.y);
+            yHT = min_point.y;
+
+            xHT = xHT + dx;
+        } while (xHT <= max_point.x);
+        
         // Convert back to PointCloud2
         pcl::toPCLPointCloud2(*augmentedcloud, pcl_pc2);
         auto new_point_cloud_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
@@ -108,6 +179,21 @@ private:
         new_point_cloud_msg->header = msg->header;
 
         publisher_->publish(*new_point_cloud_msg);
+
+        // Convert back to PointCloud2
+/*         pcl::toPCLPointCloud2(*HT, pcl_pc2);
+        auto new_point_cloud_msg_2 = std::make_shared<sensor_msgs::msg::PointCloud2>();
+        pcl_conversions::fromPCL(pcl_pc2, *new_point_cloud_msg_2);
+
+        new_point_cloud_msg_2->header = msg->header;
+
+        publisher_HT->publish(*new_point_cloud_msg_2); 
+        HT.reset(); */
+
+        std_msgs::msg::Float32MultiArray msg_prob;
+        msg_prob.data = probabilities;
+
+        publisher_probabilities->publish(msg_prob);
 
         //finishing to process the old STL point cloud
         current_STL = false;
@@ -121,7 +207,6 @@ private:
             current_STL = true;
         }
     }
-
 
     float gaussianPDF(float x, float mean, float std) {
         float exponent = -(std::pow(x - mean, 2) / (2 * std * std));
@@ -224,11 +309,17 @@ private:
         return cloud->points[max_p_point_position];
     }
 
+    float calculateMean(const std::vector<float>& probabilities) {
+        float sum = std::accumulate(std::begin(probabilities), std::end(probabilities), 0.0f);
+        return sum / static_cast<float>(probabilities.size());
+    }
+
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr subscription_STL_PC, subscription_camera_PC;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
-    rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr  publisher_with_probabilities;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_HT;
     sensor_msgs::msg::PointCloud2::SharedPtr STL;
     bool current_STL = false;
+    rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr publisher_probabilities;
 };
 
 int main(int argc, char *argv[])

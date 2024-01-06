@@ -41,7 +41,6 @@ private:
 
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudSTL(new pcl::PointCloud<pcl::PointXYZRGB>);
 
-        // Assuming you want to assign a constant color, let's say black (0, 0, 0)
         pcl::PointXYZRGB black_color_point;
         black_color_point.r = 0;
         black_color_point.g = 0;
@@ -62,7 +61,7 @@ private:
 
         // Original pose
           //translation
-        Eigen::Vector3d original_position(0, 0.148, 0.02);
+        Eigen::Vector3d original_position(0.03, 0.1, 0.0);
           //rotation
         Eigen::Affine3d original_rotation = Eigen::Affine3d::Identity();
         original_rotation *= Eigen::AngleAxisd(M_PI, Eigen::Vector3d::UnitY())
