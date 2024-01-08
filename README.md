@@ -52,3 +52,25 @@ command:
 ``` bash
 git submodule update --init --recursive
 ```
+
+
+# libigl
+
+For some pointcloud processing, the [libigl](https://github.com/libigl/libigl) is used.
+The library is automatically imported as a git submodule, still external dependencies
+must be installed by hand running:
+
+``` bash
+sudo apt-get install \
+  git \
+  build-essential \
+  cmake \
+  libx11-dev \
+  mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev \
+  libxrandr-dev \
+  libxi-dev \
+  libxmu-dev \
+  libblas-dev \
+  libxinerama-dev \
+  libxcursor-dev
+```
