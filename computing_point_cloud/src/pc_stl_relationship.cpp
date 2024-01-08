@@ -31,6 +31,8 @@ public:
             "/new_point_cloud", 10, bind(&Pc_stl_relationship::topic_callback, this, _1));
         subscription_STL_PC = this->create_subscription<sensor_msgs::msg::PointCloud2>(
             "/STL_point_cloud", 10, bind(&Pc_stl_relationship::STLCallback, this, _1));
+        pose_subscriber_ = create_subscription<geometry_msgs::msg::PoseStamped>(
+            "/pose_camera_topic", rclcpp::SensorDataQoS(), std::bind(&Pc_stl_relationship::poseCallback, this, std::placeholders::_1));
 
         publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/augmented_point_cloud", 10);
         publisher_with_probabilities = this->create_publisher<std_msgs::msg::Float32MultiArray>("/probabilities", 10);
@@ -44,12 +46,26 @@ private:
             RCLCPP_WARN(get_logger(), "STL_PC not received yet. Skipping point cloud processing.");
             return;
         }
-        else if (
+        if (
                  msg->header.stamp.sec < STL->header.stamp.sec ||
                 (msg->header.stamp.sec == STL->header.stamp.sec && msg->header.stamp.nanosec < STL->header.stamp.nanosec)
                 )
         {
             RCLCPP_WARN(get_logger(), "camera point cloud has a lower stamp than STL point cloud");
+            //std::cout << "\nCAMERA sec: " << msg->header.stamp.sec << "\nSTL sec: " << STL->header.stamp.sec << std::endl;
+            return;
+        }
+        if (!current_camera_pose)
+        {
+            RCLCPP_WARN(get_logger(), "camera pose not received yet. Skipping point cloud processing.");
+            return;
+        }
+        if (
+                 msg->header.stamp.sec < camera_pose->header.stamp.sec ||
+                (msg->header.stamp.sec == camera_pose->header.stamp.sec && msg->header.stamp.nanosec < camera_pose->header.stamp.nanosec)
+                )
+        {
+            RCLCPP_WARN(get_logger(), "camera point cloud has a lower stamp than camera pose");
             //std::cout << "\nCAMERA sec: " << msg->header.stamp.sec << "\nSTL sec: " << STL->header.stamp.sec << std::endl;
             return;
         }
@@ -111,7 +127,15 @@ private:
 
         //finishing to process the old STL point cloud
         current_STL = false;
+        current_camera_pose = false;
 
+    }
+
+    void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg){
+        if (!current_camera_pose){
+            camera_pose = msg;
+            current_camera_pose = true;
+        }
     }
 
     void STLCallback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
@@ -139,11 +163,10 @@ private:
     }
 
     float distance_point_point(pcl::PointXYZRGB point1, pcl::PointXYZRGB point2){
-        Eigen::Vector3f diff_vector = Eigen::Vector3f(
-            point1.x - point2.x,
-            point1.y - point2.y,
-            point1.z - point2.z
-        );
+        Eigen::VectorXf diff_vector(3); 
+        diff_vector << point1.x - point2.x,
+                       point1.y - point2.y,
+                       point1.z - point2.z;
 
         return diff_vector.norm();
     }
@@ -153,53 +176,39 @@ private:
         float std = 0.05;
         float distance = distance_point_point(S, P);
         return gaussianPDF(distance, 0.0, std);
+/*         float std_distance = 0.05, std_color_r = 20, std_color_g = 20, std_color_b = 20;
+        float distance = distance_point_point(S, P);
+
+        Eigen::VectorXf X(4);
+        Eigen::VectorXf mean(4);
+        X << distance, std::abs(S.r - P.r), std::abs(S.g - P.g), std::abs(S.b - P.b);
+        mean << 0, 0, 0, 0;
+        
+        Eigen::MatrixXf covariance(4, 4);
+        covariance.setZero();
+        covariance.diagonal() << std_distance * std_distance, std_color_r * std_color_r, std_color_g * std_color_g, std_color_b * std_color_b;
+
+        return multivariateGaussianPDF(X, mean, covariance); */
     }
 
     float p_of_P_S(pcl::PointXYZRGB P, pcl::PointXYZRGB S){
-/*         float X_dist = std::abs(S.x - P.x);
-        float Y_dist = std::abs(S.y - P.y);
-        float Z_dist = std::abs(S.z - P.z);
 
-        float B = 0.055;
-        float f = 0.00188;
-        float pixel_s = 1.4e-6;
-
-        float x_pixel = X_dist * f / Z_dist;
-        float y_pixel = Y_dist * f / Z_dist;
-
-        float std_Z = std::pow(Z_dist, 2) / (B * f) * pixel_s; 
-        // d (X_dist) / d (Z_dist) = x_pixel / f
-        // d (X_dist) / d (x_pixel) =  Z_dist / f
-        float std_X = (x_pixel / f) * std_Z + (Z_dist / f) * pixel_s;
-        float std_Y = (y_pixel / f) * std_Z + (Z_dist / f) * pixel_s; */
-
-        Eigen::Vector3f X(P.x, P.y, P.z);  // Replace with the desired coordinates [x, y, z]
+/*         Eigen::Vector3f X(P.x, P.y, P.z);  // Replace with the desired coordinates [x, y, z]
         Eigen::Vector3f mean(S.x, S.y, S.z);  // Replace with the mean vector [mu_x, mu_y, mu_z]
-
         float std_X = 0.01;
         float std_Y = 0.01;
         float std_Z = 0.01;
+        
+        Eigen::Matrix3f covariance = Eigen::Matrix3f::Zero();
+        covariance.diagonal() << std_X * std_X, std_Y * std_Y, std_Z * std_Z;
 
-        float var_X = std::pow(std_X, 2);
-        float var_Y = std::pow(std_Y, 2);
-        float var_Z = std::pow(std_Z, 2);
+        return multivariateGaussianPDF(X, mean, covariance); */
+        float Z_dist = std::abs(S.z - camera_pose->pose.position.z);
+        float std = 0.0184 * std::exp(0.2106 * Z_dist);
 
-        Eigen::Matrix3f covariance;  // Replace with the desired covariance matrix
-        covariance << var_X, 0.0f, 0.0f,
-                      0.0f, var_Y, 0.0f,
-                      0.0f, 0.0f, var_Z;
-
-        return multivariateGaussianPDF(X, mean, covariance);
-
+        float distance = distance_point_point(S, P);
+        return gaussianPDF(distance, 0.0, std);
     }
-
-/*     float p_of_P(pcl::PointXYZRGB P, pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudSTL){
-        float prob = 0;
-        for (const auto& STLpoint : cloudSTL->points) {
-            prob = prob + p_of_S(STLpoint, P) * p_of_P_S(P, STLpoint);
-        }
-        return prob;
-    } */
 
     float p_of_S_P(pcl::PointXYZRGB S, pcl::PointXYZRGB P){
         return p_of_S(S, P) * p_of_P_S(P, S);
@@ -228,7 +237,9 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
     rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr  publisher_with_probabilities;
     sensor_msgs::msg::PointCloud2::SharedPtr STL;
-    bool current_STL = false;
+    bool current_STL = false, current_camera_pose = false;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscriber_;
+    geometry_msgs::msg::PoseStamped::SharedPtr camera_pose;
 };
 
 int main(int argc, char *argv[])
@@ -238,3 +249,46 @@ int main(int argc, char *argv[])
     rclcpp::shutdown();
     return 0;
 }
+
+
+
+/*     float p_of_P(pcl::PointXYZRGB P, pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudSTL){
+        float prob = 0;
+        for (const auto& STLpoint : cloudSTL->points) {
+            prob = prob + p_of_S(STLpoint, P) * p_of_P_S(P, STLpoint);
+        }
+        return prob;
+    } */
+
+
+
+/* 
+        float X_dist = std::abs(S.x - camera_pose->pose.position.x);
+        float Y_dist = std::abs(S.y - camera_pose->pose.position.y);
+        float Z_dist = std::abs(S.z - camera_pose->pose.position.z);
+
+        float B = 0.055;
+        float f = 0.00188;
+        float pixel_s = 1.4e-6;
+
+        float x_pixel = X_dist * f / Z_dist;
+        float y_pixel = Y_dist * f / Z_dist;
+
+        float std_Z = std::pow(Z_dist, 2) / (B * f) * pixel_s; 
+        // d (X_dist) / d (Z_dist) = x_pixel / f
+        // d (X_dist) / d (x_pixel) =  Z_dist / f
+        float std_X = (x_pixel / f) * std_Z + (Z_dist / f) * pixel_s;
+        float std_Y = (y_pixel / f) * std_Z + (Z_dist / f) * pixel_s; */
+
+
+/* 
+        float multivariateGaussianPDF(const Eigen::VectorXf& X, const Eigen::VectorXf& mean, const Eigen::MatrixXf& covariance) {
+        Eigen::MatrixXf covarianceInverse = covariance.inverse();
+        float detCovariance = covariance.determinant();
+
+        Eigen::VectorXf diff = X - mean;
+        float exponent = -0.5 * diff.transpose() * covarianceInverse * diff;
+
+        return (1.0f / std::pow(2 * M_PI, X.size() / 2.0) * std::sqrt(detCovariance)) * std::exp(exponent);
+    }
+    }*/

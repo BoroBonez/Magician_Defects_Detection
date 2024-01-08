@@ -16,6 +16,7 @@
 #include <pcl/filters/conditional_removal.h>
 #include <pcl/filters/passthrough.h>
 #include "std_msgs/msg/float32_multi_array.hpp"
+#include <algorithm>
 
 
 using std::placeholders::_1;
@@ -123,6 +124,10 @@ private:
     }
 
 
+    float lowest_prob = *std::min_element(probabilities.begin(), probabilities.end());
+    float highest_prob = *std::max_element(probabilities.begin(), probabilities.end()); 
+
+
     zHT = min_point.z - dz/2;
     current_z = 0;
     while (current_z < index_z) {
@@ -155,12 +160,12 @@ private:
                             // yellow 255, 255, 0
                             // from yellow to red
                             newPoint.r = 255;
-                            newPoint.g = ((probabilities[i] - mean) / mean + 1) * 255;
+                            newPoint.g = ( 1 - (probabilities[i] - mean)/(lowest_prob - mean) ) * 255;
                             newPoint.b = 0;
 
                         } else {
                             // from yellow to green
-                            newPoint.r = (1 - (probabilities[i] - mean) / mean) * 255;
+                            newPoint.r = ( 1 - (probabilities[i] - mean)/(highest_prob - mean) ) * 255;
                             newPoint.g = 255;
                             newPoint.b = 0;
                         }
@@ -236,7 +241,6 @@ private:
     bool current_STL = false, current_probabilities = false, first_iteration = true;
     std_msgs::msg::Header PC_header;
     std::vector<float> probabilities;
-    std::vector<std::vector<std::vector<bool>>> pointDefined;
     std::vector<std::vector<std::vector<int>>> count;
     int index_x, index_y, index_z;
 };
