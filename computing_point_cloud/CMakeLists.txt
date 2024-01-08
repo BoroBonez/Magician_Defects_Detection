@@ -1,12 +1,16 @@
 cmake_minimum_required(VERSION 3.8)
 project(computing_point_cloud)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+configure_file(
+    ${CMAKE_CURRENT_LIST_DIR}/src/defines.hpp.in
+    ${CMAKE_CURRENT_LIST_DIR}/src/defines.hpp
+    )
 add_subdirectory(thirdparty/libigl/)
-include_directories(thirdparty/libigl/include)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -17,11 +21,15 @@ find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
 find_package(pcl_conversions REQUIRED)
 
+include_directories(thirdparty/libigl/include)
 include_directories(
-  ${std_msgs_INCLUDE_DIRS}
+    ${std_msgs_INCLUDE_DIRS}
+    thirdparty/libigl/include
+    ${Eigen3_INCLUDE_DIRS}
 )
 
 # point_cloud_sub
+add_executable(libigl_test src/test_libigl.cpp)
 add_executable(point_cloud_sub src/point_cloud_sub.cpp)
 ament_target_dependencies(point_cloud_sub rclcpp std_msgs sensor_msgs pcl_conversions)
 
