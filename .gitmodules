@@ -4,3 +4,6 @@
 [submodule "zed-ros2-wrapper"]
 	path = zed-ros2-wrapper
 	url = https://github.com/stereolabs/zed-ros2-wrapper.git
+[submodule "computing_point_cloud/thirdparty/libigl"]
+	path = computing_point_cloud/thirdparty/libigl
+	url = https://github.com/libigl/libigl
