@@ -64,6 +64,10 @@ private:
       pose_msg->pose.position.x = transformed_position.x();
       pose_msg->pose.position.y = transformed_position.y();
       pose_msg->pose.position.z = transformed_position.z();
+      pose_msg->pose.orientation.x = transformed_orientation.x();
+      pose_msg->pose.orientation.y = transformed_orientation.y();
+      pose_msg->pose.orientation.z = transformed_orientation.z();
+      pose_msg->pose.orientation.w = transformed_orientation.w();
       
       pose_msg->header = msg->header;
       publisher_pose->publish(*pose_msg);

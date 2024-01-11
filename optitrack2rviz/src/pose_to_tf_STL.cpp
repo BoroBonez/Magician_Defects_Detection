@@ -15,6 +15,7 @@ public:
     pose_subscriber_ = create_subscription<geometry_msgs::msg::PoseStamped>(
     topic_param_output, rclcpp::SensorDataQoS(), std::bind(&PoseToTFNode::poseCallback, this, std::placeholders::_1));
 
+    publisher_pose = create_publisher<geometry_msgs::msg::PoseStamped>("/pose_STL_topic", 10);
   }
 
 private:
@@ -60,11 +61,22 @@ private:
 
       // Broadcast the transformed pose
       tf_broadcaster_.sendTransform(transform_stamped);
+      auto pose_msg = std::make_shared<geometry_msgs::msg::PoseStamped>();
+      pose_msg->pose.position.x = transformed_position.x();
+      pose_msg->pose.position.y = transformed_position.y();
+      pose_msg->pose.position.z = transformed_position.z();
+      pose_msg->pose.orientation.x = transformed_orientation.x();
+      pose_msg->pose.orientation.y = transformed_orientation.y();
+      pose_msg->pose.orientation.z = transformed_orientation.z();
+      pose_msg->pose.orientation.w = transformed_orientation.w();
+      
+      pose_msg->header = msg->header;
+      publisher_pose->publish(*pose_msg);
   }
-
 
   rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscriber_;
   tf2_ros::TransformBroadcaster tf_broadcaster_{this};  
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr publisher_pose;
 };
 
 int main(int argc, char *argv[]) {
