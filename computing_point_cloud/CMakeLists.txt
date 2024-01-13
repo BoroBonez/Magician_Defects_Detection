@@ -10,7 +10,13 @@ configure_file(
     ${CMAKE_CURRENT_LIST_DIR}/src/defines.hpp.in
     ${CMAKE_CURRENT_LIST_DIR}/src/defines.hpp
     )
-add_subdirectory(thirdparty/libigl/)
+
+# Add libigl source files directly to your project
+add_subdirectory(thirdparty/libigl)
+
+# Explicitly set CMAKE_MODULE_PATH to include libigl/cmake
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/thirdparty/libigl/cmake")
+
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -20,6 +26,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(PCL REQUIRED)
 find_package(pcl_conversions REQUIRED)
+find_package(libigl REQUIRED)
 
 include_directories(thirdparty/libigl/include)
 include_directories(
@@ -30,6 +37,7 @@ include_directories(
 
 # point_cloud_sub
 add_executable(libigl_test src/test_libigl.cpp)
+target_link_libraries(libigl_test PRIVATE igl::core igl::opengl_glfw igl::opengl_glfw_imgui)
 add_executable(point_cloud_sub src/point_cloud_sub.cpp)
 ament_target_dependencies(point_cloud_sub rclcpp std_msgs sensor_msgs pcl_conversions)
 
@@ -69,9 +77,22 @@ target_include_directories(hough_transform PUBLIC
   $<INSTALL_INTERFACE:include>)
 target_compile_features(hough_transform PUBLIC cxx_std_17)
 
+# raycast
+add_executable(raycast src/raycast.cpp)
+ament_target_dependencies(raycast rclcpp std_msgs sensor_msgs pcl_conversions)
+
+target_link_libraries(raycast ${PCL_LIBRARIES})
+target_link_libraries(raycast PRIVATE igl::core igl::opengl_glfw igl::opengl_glfw_imgui)
+target_include_directories(raycast PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(raycast PUBLIC cxx_std_17)
+
 #other
-install(TARGETS point_cloud_sub pc_stl_relationship stl_point_cloud hough_transform
+install(TARGETS point_cloud_sub pc_stl_relationship stl_point_cloud hough_transform raycast
   DESTINATION lib/${PROJECT_NAME})
+
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
