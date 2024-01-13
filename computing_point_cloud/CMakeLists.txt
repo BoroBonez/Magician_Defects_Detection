@@ -37,7 +37,6 @@ include_directories(
 
 # point_cloud_sub
 add_executable(libigl_test src/test_libigl.cpp)
-target_link_libraries(libigl_test PRIVATE igl::core igl::opengl_glfw igl::opengl_glfw_imgui)
 add_executable(point_cloud_sub src/point_cloud_sub.cpp)
 ament_target_dependencies(point_cloud_sub rclcpp std_msgs sensor_msgs pcl_conversions)
 
@@ -82,7 +81,6 @@ add_executable(raycast src/raycast.cpp)
 ament_target_dependencies(raycast rclcpp std_msgs sensor_msgs pcl_conversions)
 
 target_link_libraries(raycast ${PCL_LIBRARIES})
-target_link_libraries(raycast PRIVATE igl::core igl::opengl_glfw igl::opengl_glfw_imgui)
 target_include_directories(raycast PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
