@@ -25,7 +25,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: STL_point_cloud
+    SyncSource: points_assessed
 Visualization Manager:
   Class: ""
   Displays:
@@ -176,7 +176,7 @@ Visualization Manager:
       Class: rviz_default_plugins/PointCloud2
       Color: 255; 255; 255
       Color Transformer: RGB8
-      Decay Time: 10
+      Decay Time: 0
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
@@ -313,7 +313,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.1212005615234375
+      Distance: 0.8031548261642456
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -328,10 +328,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.10678713023662567
+      Pitch: 0.39178693294525146
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.744288444519043
+      Yaw: 5.714272499084473
     Saved: ~
 Window Geometry:
   Displays:

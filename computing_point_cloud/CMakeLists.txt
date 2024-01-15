@@ -89,6 +89,7 @@ target_compile_features(hough_transform PUBLIC cxx_std_17)
 
 # raycast
 add_executable(raycast src/raycast.cpp)
+target_link_libraries(raycast PRIVATE igl::core)
 # target_link_libraries(raycast PRIVATE ${PCL_LIBRARIES} igl::core igl::opengl_glfw igl::opengl_glfw_imgui)
 target_link_libraries(raycast PRIVATE ${PCL_LIBRARIES} igl::core ${pcl_conversions_LIBRARIES})
 target_include_directories(raycast PUBLIC

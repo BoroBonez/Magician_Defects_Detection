@@ -13,6 +13,8 @@
 #include <fstream>
 #include <igl/readSTL.h>
 #include <igl/unproject.h>
+#include <igl/ray_mesh_intersect.h>
+#include "igl/Hit.h"
 #include <iostream>
 #include <pcl/common/common.h>
 #include <pcl/filters/conditional_removal.h>
@@ -59,6 +61,7 @@ public:
 
 private:
     void topic_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
+        //check to synchronize
         if (!current_STL) {
             RCLCPP_WARN(
                     get_logger(),
@@ -73,8 +76,6 @@ private:
                     get_logger(),
                     "camera point cloud has a lower stamp than STL point cloud"
             );
-            // std::cout << "\nCAMERA sec: " << msg->header.stamp.sec << "\nSTL sec: "
-            // << STL->header.stamp.sec << std::endl;
             return;
         }
         if (!current_camera_pose) {
@@ -91,23 +92,19 @@ private:
                     get_logger(),
                     "camera point cloud has a lower stamp than camera pose"
             );
-            // std::cout << "\nCAMERA sec: " << msg->header.stamp.sec << "\nSTL sec: "
-            // << STL->header.stamp.sec << std::endl;
             return;
         }
-        // extracting camera point cloud
+
+        // extracting camera point cloud from message
         pcl::PCLPointCloud2 pcl_pc2;
         pcl_conversions::toPCL(*msg, pcl_pc2);
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr
-                cloudPC(new pcl::PointCloud<pcl::PointXYZRGB>);
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloudPC(new pcl::PointCloud<pcl::PointXYZRGB>);
         pcl::fromPCLPointCloud2(pcl_pc2, *cloudPC);
 
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr
-                augmentedcloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr augmentedcloud(new pcl::PointCloud<pcl::PointXYZRGB>);
 
-        std::string filename = std::string(
-                "/home/matteo/ros2_ws_git/src/display_with_rviz2/stl/mattonella1.stl"
-        );
+        // extracting STL point cloud
+        std::string filename = std::string("/home/matteo/ros2_ws_git/src/display_with_rviz2/stl/mattonella1.stl");
         std::ifstream file;
         file.open(filename);
         // V has the coordinates on the column
@@ -119,28 +116,7 @@ private:
             file.close();  // Close the file before returning
             return;        // Return an error code or handle the error accordingly
         }
-        Eigen::Vector3d origin(
-                camera_pose->pose.position.x,
-                camera_pose->pose.position.y,
-                camera_pose->pose.position.z
-        );
-        Eigen::Vector3d direction(
-                (V.row(0)).x() - origin(0),
-                (V.row(0)).y() - origin(1),
-                (V.row(0)).z() - origin(2)
-        );
-        Eigen::RowVector3d intersection;
-        std::cout << "Origin: " << origin.transpose() << std::endl;
-        std::cout << "Direction: " << direction.transpose() << std::endl;
-        std::cout << "V:\n" << V << std::endl;
-        std::cout << "F:\n" << F << std::endl;
-        std::cout << "V.rows(): " << V.rows() << " V.cols(): " << V.cols() << std::endl;
-        std::cout << "F.rows(): " << F.rows() << " F.cols(): " << F.cols() << std::endl;
-
-
-        // igl::unproject(origin, direction, V, F, intersection);
         scalePointCloud(V, 0.001);
-        // Close the file after reading
         file.close();
 
         // Extract translation and rotation information from PoseStamped
@@ -149,7 +125,6 @@ private:
                 STL_pose->pose.position.y,
                 STL_pose->pose.position.z
         );
-
         Eigen::Quaterniond rotation(
                 STL_pose->pose.orientation.w,
                 STL_pose->pose.orientation.x,
@@ -159,7 +134,7 @@ private:
 
         // Perform rotation
         Eigen::Matrix3d rotation_matrix = rotation.toRotationMatrix();
-        V                               = (rotation_matrix * V.transpose()).transpose();
+        V = (rotation_matrix * V.transpose()).transpose();
 
         // Perform translation
         V.rowwise() += translation.transpose();
@@ -171,7 +146,7 @@ private:
         max_point = V.colwise().maxCoeff();
 
         pcl::PassThrough<pcl::PointXYZRGB> pass;
-        float                              step = 0.01;
+        float step = 0.01;
 
         pass.setInputCloud(cloudPC);
         pass.setFilterFieldName("x");
@@ -188,35 +163,61 @@ private:
         pass.setFilterLimits(min_point.z() - step, max_point.z() + step);
         pass.filter(*cloudPC);
 
+        //perform raycast
         std::vector<float> probabilities;
         probabilities.clear();
-        for (std::size_t i = 0; i < V.rows(); ++i) {
-            Eigen::Vector3d origin(
-                    camera_pose->pose.position.x,
-                    camera_pose->pose.position.y,
-                    camera_pose->pose.position.z
-            );
-            Eigen::Vector3d direction(
-                    (V.row(i)).x() - origin(0),
-                    (V.row(i)).y() - origin(1),
-                    (V.row(i)).z() - origin(2)
-            );
-            Eigen::RowVector3d intersection;
-            // igl::unproject(origin, direction, V, F, intersection);
-            /*             pcl::PointXYZRGB p;
-                        p.x = intersection(0);
-                        p.y = intersection(1);
-                        p.z = intersection(2);
-                        //std::cout << "\n\n" << cloudSTL->points.size() << " point
-               lefted to compute\n\n" << std::endl; augmentedcloud->push_back(p); */
+        for (std::size_t i = 0; i < cloudPC->points.size(); ++i) {
+
+                Eigen::Vector3d origin(
+                        camera_pose->pose.position.x,
+                        camera_pose->pose.position.y,
+                        camera_pose->pose.position.z
+                );
+                Eigen::Vector3d direction(
+                        cloudPC->points[i].x - origin(0),
+                        cloudPC->points[i].y - origin(1),
+                        cloudPC->points[i].z - origin(2)
+                );
+
+                std::vector<igl::Hit> hits;
+                igl::ray_mesh_intersect(origin, direction, V, F, hits);
+                if (hits.size() > 0) {
+                        // Intersection found
+                        pcl::PointXYZRGB p;
+                        p.x = origin.x() + hits.front().t * direction.x();
+                        p.y = origin.y() + hits.front().t * direction.y();
+                        p.z = origin.z() + hits.front().t * direction.z();
+
+                        probabilities.push_back(p_of_P_S(cloudPC->points[i], p));
+                        augmentedcloud->points.push_back(p);
+                } 
+
         }
 
-        // auto message = std_msgs::msg::Float32MultiArray();
-        // message.data = probabilities;
-        // publisher_with_probabilities->publish(message);
+        //set the new color to show the heatmap
+        float mean = calculateMean(probabilities);
+        float lowest_prob = *std::min_element(probabilities.begin(), probabilities.end());
+        float highest_prob = *std::max_element(probabilities.begin(), probabilities.end()); 
+
+        for (std::size_t i = 0; i < augmentedcloud->points.size(); ++i) {
+                if (probabilities[i] - mean < 0) {
+                        // yellow 255, 255, 0
+                        // from yellow to red
+                        augmentedcloud->points[i].r = 255;
+                        augmentedcloud->points[i].g = ( 1 - (probabilities[i] - mean)/(lowest_prob - mean) ) * 255;
+                        augmentedcloud->points[i].b = 0;
+
+                } else {
+                        // from yellow to green
+                        augmentedcloud->points[i].r = ( 1 - (probabilities[i] - mean)/(highest_prob - mean) ) * 255;
+                        augmentedcloud->points[i].g = 255;
+                        augmentedcloud->points[i].b = 0;
+                }
+        }
+
 
         // Convert back to PointCloud2
-        pcl::toPCLPointCloud2(*cloudPC, pcl_pc2);
+        pcl::toPCLPointCloud2(*augmentedcloud, pcl_pc2);
         auto new_point_cloud_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
         pcl_conversions::fromPCL(pcl_pc2, *new_point_cloud_msg);
 
@@ -243,8 +244,14 @@ private:
         }
     }
 
+    // other function
+    float calculateMean(const std::vector<float>& probabilities) {
+        float sum = std::accumulate(std::begin(probabilities), std::end(probabilities), 0.0f);
+        return sum / static_cast<float>(probabilities.size());
+    }
+
     void scalePointCloud(Eigen::MatrixXd& cloud, double scale_factor) {
-        for (std::size_t i = 0; i < cloud.rows(); ++i) { cloud.row(i) *= scale_factor; }
+        for (std::size_t i = 0; i < (std::size_t)cloud.rows(); ++i) { cloud.row(i) *= scale_factor; }
     }
 
     float gaussianPDF(float x, float mean, float std) {
@@ -252,102 +259,38 @@ private:
         return (1.0f / (std * std::sqrt(2 * M_PI))) * std::exp(exponent);
     }
 
-    float multivariateGaussianPDF(
-            const Eigen::Vector3f& X,
-            const Eigen::Vector3f& mean,
-            const Eigen::Matrix3f& covariance
-    ) {
+    float multivariateGaussianPDF(const Eigen::Vector3f& X, const Eigen::Vector3f& mean, const Eigen::Matrix3f& covariance) {
         Eigen::Matrix3f covarianceInverse = covariance.inverse();
-        float           detCovariance     = covariance.determinant();
+        float detCovariance = covariance.determinant();
 
-        Eigen::Vector3f diff     = X - mean;
-        float           exponent = -0.5 * diff.transpose() * covarianceInverse * diff;
+        Eigen::Vector3f diff = X - mean;
+        float exponent = -0.5 * diff.transpose() * covarianceInverse * diff;
 
-        return (1.0f / std::pow(2 * M_PI, 1.5) * std::sqrt(detCovariance)) *
-               std::exp(exponent);
+        return (1.0f / std::pow(2 * M_PI, 1.5) * std::sqrt(detCovariance)) * std::exp(exponent);
     }
 
-    float distance_point_point(pcl::PointXYZRGB point1, pcl::PointXYZRGB point2) {
-        Eigen::VectorXf diff_vector(3);
-        diff_vector << point1.x - point2.x, point1.y - point2.y, point1.z - point2.z;
+    float distance_point_point(pcl::PointXYZRGB point1, pcl::PointXYZRGB point2){
+        Eigen::VectorXf diff_vector(3); 
+        diff_vector << point1.x - point2.x,
+                       point1.y - point2.y,
+                       point1.z - point2.z;
 
         return diff_vector.norm();
     }
-
-    float p_of_S(pcl::PointXYZRGB S, pcl::PointXYZRGB P) {
-        // considering that the STL is not perfectly overlapped we assume a std of 5cm
-        float std      = 0.05;
-        float distance = distance_point_point(S, P);
-        return gaussianPDF(distance, 0.0, std);
-        /*         float std_distance = 0.05, std_color_r = 20, std_color_g = 20,
-           std_color_b = 20; float distance = distance_point_point(S, P);
-
-                Eigen::VectorXf X(4);
-                Eigen::VectorXf mean(4);
-                X << distance, std::abs(S.r - P.r), std::abs(S.g - P.g), std::abs(S.b -
-           P.b); mean << 0, 0, 0, 0;
-
-                Eigen::MatrixXf covariance(4, 4);
-                covariance.setZero();
-                covariance.diagonal() << std_distance * std_distance, std_color_r *
-           std_color_r, std_color_g * std_color_g, std_color_b * std_color_b;
-
-                return multivariateGaussianPDF(X, mean, covariance); */
-    }
-
-    float p_of_P_S(pcl::PointXYZRGB P, pcl::PointXYZRGB S) {
-        /*         Eigen::Vector3f X(P.x, P.y, P.z);  // Replace with the desired
-           coordinates [x, y, z] Eigen::Vector3f mean(S.x, S.y, S.z);  // Replace with
-           the mean vector [mu_x, mu_y, mu_z] float std_X = 0.01; float std_Y = 0.01;
-                float std_Z = 0.01;
-
-                Eigen::Matrix3f covariance = Eigen::Matrix3f::Zero();
-                covariance.diagonal() << std_X * std_X, std_Y * std_Y, std_Z * std_Z;
-
-                return multivariateGaussianPDF(X, mean, covariance); */
+    
+    float p_of_P_S(pcl::PointXYZRGB P, pcl::PointXYZRGB S){
         float Z_dist = std::abs(S.z - camera_pose->pose.position.z);
-        float std    = 0.0184 * std::exp(0.2106 * Z_dist);
+        float std = 0.0184 * std::exp(0.2106 * Z_dist);
 
         float distance = distance_point_point(S, P);
         return gaussianPDF(distance, 0.0, std);
     }
 
-    float p_of_S_P(pcl::PointXYZRGB S, pcl::PointXYZRGB P) {
-        return p_of_S(S, P) * p_of_P_S(P, S);
-    }
-
-    pcl::PointXYZRGB max_probability_point_p_pc(
-            pcl::PointXYZRGB                       point1,
-            pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud,
-            std::vector<float>&                    probabilities
-    ) {
-        std::size_t max_p_point_position = 0;
-        std::size_t j                    = 0;
-        float       max_probability      = std::numeric_limits<float>::min();
-
-        for (const auto& pointPC : cloud->points) {
-            float probability = p_of_S_P(point1, pointPC);
-
-            if (std::max(max_probability, probability) == probability) {
-                max_probability      = probability;
-                max_p_point_position = j;
-            }
-            j++;
-        }
-
-        probabilities.push_back(max_probability);
-        return cloud->points[max_p_point_position];
-    }
-
-    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr
-                                                                subscription_camera_PC;
+    rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr subscription_camera_PC;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
-    rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr
-            publisher_with_probabilities;
-    bool    current_STL = false, current_camera_pose = false;
-    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr
-            pose_subscriber_camera,
-            pose_subscriber_STL;
+    rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr publisher_with_probabilities;
+    bool current_STL = false, current_camera_pose = false;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscriber_camera, pose_subscriber_STL;
     geometry_msgs::msg::PoseStamped::SharedPtr camera_pose, STL_pose;
 };
 
