@@ -10,7 +10,6 @@
 #include "sensor_msgs/msg/point_cloud2.hpp"
 //#include <pcl/io/stl_io.h>
 #include <Eigen/Core>
-#include <Eigen/Sparse>
 #include <fstream>
 #include <igl/readSTL.h>
 #include <igl/unproject.h>
@@ -33,89 +32,135 @@
 using std::bind;
 using std::placeholders::_1;
 
+class Triangle {
+    public:
+        // Constructor
+        Triangle(float prob) : probability(prob) {
+        }
+
+        void print_probability() const {
+            std::cout << "\nprobability: " << probability << std::endl;
+        }
+
+        void print_error() {
+            if(error)
+                std::cout << "\nerror: " << error << std::endl;
+            else 
+                std::cout << "\nthe error is not available yet" << std::endl;
+        }
+
+        void error_estimation() {
+
+        }
+
+        float probability, error, normal_dist_camera;
+};
+
 class Mesh {
     public:
         Mesh(std::size_t size, Eigen::MatrixXd V_copy, Eigen::MatrixXi F_copy) : n_of_triangles(size), V(V_copy), F(F_copy) {
+            //initialization of each triangles
+            triangles.reserve(size);
+            for (std::size_t  i = 0; i < size; ++i) {
+                triangles.push_back(std::make_unique<Triangle>(-1.0f));
+            }
+            normal_to_each_vertex.resize(V.rows());
 
-            normal_to_each_face.resize(n_of_triangles);
-            x.resize(n_of_triangles);
-            P = Eigen::MatrixXd::Zero(n_of_triangles, n_of_triangles);
-
-            //initialization of the normal direction of each face
+            //initialization of the normal direction of each vertex
             std::vector<int> connectedVertices_id;
-            for (std::size_t  i = 0; i < (std::size_t )n_of_triangles; ++i) {
-                x[i] = 0;
-                P(i, i) = 0.05 * 0.05;
+            for (std::size_t  i = 0; i < (std::size_t )V.rows(); ++i) {
+                findConnectedVertices(i, F, connectedVertices_id);
+                Eigen::MatrixXd A(connectedVertices_id.size(), 3);
 
-                Eigen::Vector3d vertex1(V.row(F.row(i)[0])), vertex2(V.row(F.row(i)[1])), vertex3(V.row(F.row(i)[2]));
-                Eigen::Vector3d edge1(vertex1[0] - vertex2[0], vertex1[1] - vertex2[1], vertex1[2] - vertex2[2]);
-                Eigen::Vector3d edge2(vertex1[0] - vertex3[0], vertex1[1] - vertex3[1], vertex1[2] - vertex3[2]);
+                for (std::size_t m = 0; m < connectedVertices_id.size(); ++m) {
+                        A.row(m) = V.row(connectedVertices_id[m]) - V.row(i);
+                }
 
-                Eigen::Vector3d normal;
-                normal = edge1.cross(edge2);
-                normal = normal / normal.norm();
-                normal_to_each_face[i] = normal;
+                //PCA
+                Eigen::MatrixXd Covariance = A.transpose() * A;
+                Eigen::EigenSolver<Eigen::MatrixXd> solver(Covariance);
+                Eigen::MatrixXd eigenvectors = solver.eigenvectors().real();
+                Eigen::VectorXd eigenvalues = solver.eigenvalues().real();
+                int minEigenvalueIndex;
+                eigenvalues.minCoeff(&minEigenvalueIndex);
+                // Get the corresponding eigenvector
+                Eigen::Vector3d minEigenvector = eigenvectors.col(minEigenvalueIndex);
+                normal_to_each_vertex[i] = minEigenvector;
             }
 
         }
 
-        float h_x(std::size_t index){
-            return x[index];
+        float calculateMean() {
+            size_t size = 0;
+            float sum = 0;
+            for (std::size_t i = 0; i < n_of_triangles; ++i) {
+                if (triangles[i]->probability > 0){
+                    size++;
+                    sum += triangles[i]->probability;
+                }
+            }
+            return sum / size;
         }
 
-        double lowest_state(){
-            float min = std::numeric_limits<double>::max();
+        float min_probability(){
+            float min = std::numeric_limits<float>::max();
             for (std::size_t i = 0; i < n_of_triangles; ++i) {
-                    if (std::abs(x[i]) < min){
-                        min = std::abs(x[i]);
+                if (triangles[i]->probability > 0){
+                    if (triangles[i]->probability < min){
+                        min = triangles[i]->probability;
                     }
                 }
+            }
             return min;
         }
 
-        double highest_state(){
-            float max = std::numeric_limits<double>::min();
-            for (std::size_t i = 0; i < n_of_triangles; ++i) {
-                    if (std::abs(x[i]) > max){
-                        max = std::abs(x[i]);
+        float max_probability(){
+            float max = std::numeric_limits<float>::lowest();
+            for (std::size_t i = 0; i < (std::size_t)n_of_triangles; ++i) {
+                if (triangles[i]->probability > 0){
+                    if (triangles[i]->probability > max){
+                        max = triangles[i]->probability;
                     }
                 }
+            }
             return max;
         }
 
-        void print_state(){
+        void print_probabilities(){
             std::cout << "\n" << std::endl;
             for (std::size_t i = 0; i < n_of_triangles; ++i) {
-                std::cout << "the state x[" << i << "] is: " << x[i] << "\n" << std::endl;
+                triangles[i]->print_probability();
+                std::cout << "\n" << std::endl;
             }
         }
 
-        void generate_state_point_cloud(){
-            // Initialize X_state
-            X_state = pcl::PointCloud<pcl::PointXYZRGB>::Ptr(new pcl::PointCloud<pcl::PointXYZRGB>());
-            X_state->points.reserve(n_of_triangles);
-
-            for (std::size_t  i = 0; i < (std::size_t )n_of_triangles; ++i) {
-                Eigen::Vector3d vertex1(V.row(F.row(i)[0])), vertex2(V.row(F.row(i)[1])), vertex3(V.row(F.row(i)[2]));
-
-                Eigen::Vector3d displacement_vector( normal_to_each_face[i]*x[i] );
-
-                pcl::PointXYZRGB p;
-                p.x = (vertex1[0] + vertex2[0] + vertex3[0]) / 3 + displacement_vector[0];
-                p.y = (vertex1[1] + vertex2[1] + vertex3[1]) / 3 + displacement_vector[1];
-                p.z = (vertex1[2] + vertex2[2] + vertex3[2]) / 3 + displacement_vector[2];
-                X_state->points.push_back(p);
-            }
-
-        }
-
+        std::vector<std::unique_ptr<Triangle>> triangles;
         std::size_t n_of_triangles;
-        std::vector<Eigen::Vector3d> normal_to_each_face;
+        std::vector<Eigen::Vector3d> normal_to_each_vertex;
         Eigen::MatrixXd V;
         Eigen::MatrixXi F;
-        Eigen::VectorXd x;
-        Eigen::MatrixXd P;
-        pcl::PointCloud<pcl::PointXYZRGB>::Ptr X_state;
+
+    private:
+        void findConnectedVertices(int selectedVertexID, const Eigen::MatrixXi& F, std::vector<int>& connectedVertices) {
+            connectedVertices.clear();
+            
+            // Iterate through each face
+            for (int i = 0; i < F.rows(); ++i) {
+                // Check if the selected vertex is part of the current face
+                if (F(i, 0) == selectedVertexID || F(i, 1) == selectedVertexID || F(i, 2) == selectedVertexID) {
+                    // Add all vertices of the current face to the connectedVertices vector
+                    connectedVertices.push_back(F(i, 0));
+                    connectedVertices.push_back(F(i, 1));
+                    connectedVertices.push_back(F(i, 2));
+                }
+            }
+
+            // Remove duplicates from the connectedVertices vector
+            std::sort(connectedVertices.begin(), connectedVertices.end());
+            // erase from an index to another index
+            connectedVertices.erase(std::unique(connectedVertices.begin(), connectedVertices.end()), connectedVertices.end());
+            connectedVertices.erase(std::remove(connectedVertices.begin(), connectedVertices.end(), selectedVertexID), connectedVertices.end());
+        }
 };
 
 class Raycast : public rclcpp::Node {
@@ -139,11 +184,6 @@ public:
         publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
                 "/augmented_point_cloud", 10
         );
-
-        publisher_state = this->create_publisher<sensor_msgs::msg::PointCloud2>(
-                "/X", 10
-        );
-
         publisher_with_probabilities =
                 this->create_publisher<std_msgs::msg::Float32MultiArray>(
                         "/probabilities", 10
@@ -160,15 +200,15 @@ private:
             );
             return;
         }
-        //if (msg->header.stamp.sec < STL_pose->header.stamp.sec ||
-        //    (msg->header.stamp.sec == STL_pose->header.stamp.sec &&
-        //     msg->header.stamp.nanosec < STL_pose->header.stamp.nanosec)) {
-        //    RCLCPP_WARN(
-        //            get_logger(),
-        //            "camera point cloud has a lower stamp than STL point cloud"
-        //    );
-        //    return;
-        //}
+        if (msg->header.stamp.sec < STL_pose->header.stamp.sec ||
+            (msg->header.stamp.sec == STL_pose->header.stamp.sec &&
+             msg->header.stamp.nanosec < STL_pose->header.stamp.nanosec)) {
+            RCLCPP_WARN(
+                    get_logger(),
+                    "camera point cloud has a lower stamp than STL point cloud"
+            );
+            return;
+        }
         if (!current_camera_pose) {
             RCLCPP_WARN(
                     get_logger(),
@@ -176,15 +216,15 @@ private:
             );
             return;
         }
-        //if (msg->header.stamp.sec < camera_pose->header.stamp.sec ||
-        //    (msg->header.stamp.sec == camera_pose->header.stamp.sec &&
-        //     msg->header.stamp.nanosec < camera_pose->header.stamp.nanosec)) {
-        //    RCLCPP_WARN(
-        //            get_logger(),
-        //            "camera point cloud has a lower stamp than camera pose"
-        //    );
-        //    return;
-        //}
+        if (msg->header.stamp.sec < camera_pose->header.stamp.sec ||
+            (msg->header.stamp.sec == camera_pose->header.stamp.sec &&
+             msg->header.stamp.nanosec < camera_pose->header.stamp.nanosec)) {
+            RCLCPP_WARN(
+                    get_logger(),
+                    "camera point cloud has a lower stamp than camera pose"
+            );
+            return;
+        }
 
         // extracting camera point cloud from message
         pcl::PCLPointCloud2 pcl_pc2;
@@ -236,7 +276,7 @@ private:
         max_point = V.colwise().maxCoeff();
 
         pcl::PassThrough<pcl::PointXYZRGB> pass;
-        float step = -0.06;
+        float step = 0.01;
 
         pass.setInputCloud(cloudPC);
         pass.setFilterFieldName("x");
@@ -263,96 +303,59 @@ private:
         //perform raycast
         std::vector<int> id_point_at_index;
         id_point_at_index.clear();
-        std::vector<double> dynamicVector_m;
-        std::vector<Eigen::RowVectorXd> H_rows;
-        std::vector<double> R_diagonal;
-
+        
         for (std::size_t i = 0; i < cloudPC->points.size(); ++i) {
-            Eigen::Vector3d origin(
-                    camera_pose->pose.position.x,
-                    camera_pose->pose.position.y,
-                    camera_pose->pose.position.z
-            );
-            Eigen::Vector3d direction(
-                    cloudPC->points[i].x - origin(0),
-                    cloudPC->points[i].y - origin(1),
-                    cloudPC->points[i].z - origin(2)
-            );
-            direction = direction / direction.norm();
+                Eigen::Vector3d origin(
+                        camera_pose->pose.position.x,
+                        camera_pose->pose.position.y,
+                        camera_pose->pose.position.z
+                );
+                Eigen::Vector3d direction(
+                        cloudPC->points[i].x - origin(0),
+                        cloudPC->points[i].y - origin(1),
+                        cloudPC->points[i].z - origin(2)
+                );
+                direction = direction / direction.norm();
 
-            std::vector<igl::Hit> hits;
-            igl::ray_mesh_intersect(origin, direction, V, F, hits);
-            if (hits.size() > 0) {
-                // Intersection found
-                std::cout << "there are still " << cloudPC->points.size() - i << " to analyze\n" << std::endl;
-                pcl::PointXYZRGB p;
-                p.x = origin.x() + hits.front().t * direction.x();
-                p.y = origin.y() + hits.front().t * direction.y();
-                p.z = origin.z() + hits.front().t * direction.z();
+                std::vector<igl::Hit> hits;
+                igl::ray_mesh_intersect(origin, direction, V, F, hits);
+                if (hits.size() > 0) {
+                        // Intersection found
+                        pcl::PointXYZRGB p;
+                        p.x = origin.x() + hits.front().t * direction.x();
+                        p.y = origin.y() + hits.front().t * direction.y();
+                        p.z = origin.z() + hits.front().t * direction.z();
 
-                //Bayesian filter matrices filling
-                dynamicVector_m.push_back( vector_from_p_to_p(p, cloudPC->points[i]).dot(mesh_ptr->normal_to_each_face[hits.front().id]) );
-                Eigen::RowVectorXd H_row = Eigen::RowVectorXd::Zero(mesh_ptr->n_of_triangles);
-                H_row[hits.front().id] = 1;
-                H_rows.push_back(H_row);
-                R_diagonal.push_back( R_i(cloudPC->points[i]) );
-
-                //mesh_ptr->triangles[hits.front().id]->normal_dist_camera = 
-                augmentedcloud->points.push_back(p);
-                id_point_at_index.push_back(hits.front().id);
-                count[hits.front().id]++;
-            } 
+                        mesh_ptr->triangles[hits.front().id]->probability = ( mesh_ptr->triangles[hits.front().id]->probability * count[hits.front().id] + p_of_P_S(cloudPC->points[i], p) ) / ( count[hits.front().id] + 1);
+                        //mesh_ptr->triangles[hits.front().id]->normal_dist_camera = 
+                        augmentedcloud->points.push_back(p);
+                        id_point_at_index.push_back(hits.front().id);
+                        count[hits.front().id]++;
+                } 
 
         }
-        std::cout << "i have finished\n" << std::endl;
-        //matrix generation
-        std::size_t n_hits = dynamicVector_m.size();
-        Eigen::Map<Eigen::VectorXd> m(dynamicVector_m.data(), n_hits);
-        Eigen::MatrixXd H(n_hits, mesh_ptr->n_of_triangles);
-        for (size_t i = 0; i < n_hits; ++i) {
-            H.row(i) = H_rows[i];
-        }
-        Eigen::DiagonalMatrix<double, Eigen::Dynamic> R_DM(n_hits);
-        // Copy the diagonal elements to the matrix
-        R_DM.diagonal() = Eigen::Map<Eigen::VectorXd>(R_diagonal.data(), n_hits);
-        Eigen::MatrixXd R = R_DM.toDenseMatrix();
-        std::cout << "i did matrix conversions\n" << std::endl;
-        std::cout << "\nThe size of H is: (" << H.rows() << ", " << H.cols() << ")\n" << std::endl;
-        std::cout << "\nThe size of P is: (" << mesh_ptr->P.rows() << ", " << mesh_ptr->P.cols() << ")\n" << std::endl;
-        std::cout << "\nThe size of R is: (" << R.rows() << ", " << R.cols() << ")\n" << std::endl;
-
-        //Bayesian filter matrices computing
-        Eigen::MatrixXd S = H * mesh_ptr->P * H.transpose() + R;
-        std::cout << "i did matrix S\n" << std::endl;
-        std::cout << "\nThe size of S is: (" << S.rows() << ", " << S.cols() << ")\n" << std::endl;
-        Eigen::MatrixXd S_inverse = S.inverse();
-        std::cout << "\nThe size of S_inverse is: (" << S_inverse.rows() << ", " << S_inverse.cols() << ")\n" << std::endl;
-        std::cout << "i did matrix inverse of S\n" << std::endl;
-
-        std::cout << "\nThe size of Ht * S_inverse is: (" << (H.transpose() * S_inverse).rows() << ", " << (H.transpose() * S_inverse).cols() << ")\n" << std::endl;
-        Eigen::MatrixXd W =  mesh_ptr->P * H.transpose() * S_inverse;
-        std::cout << "i did matrix W\n" << std::endl;
-        mesh_ptr->x = mesh_ptr->x + W * (m - H * mesh_ptr->x);
-        mesh_ptr->P = (Eigen::MatrixXd::Identity(mesh_ptr->n_of_triangles, mesh_ptr->n_of_triangles) - W * H) * mesh_ptr->P;
-        std::cout << "i did matrix operations\n" << std::endl;
-
 
         //set the new color to show the heatmap
+        float mean = mesh_ptr->calculateMean();
+        float lowest_prob = mesh_ptr->min_probability();
+        float highest_prob = mesh_ptr->max_probability(); 
+
+        //std::cout << "\n\nthe mean is: " << mean << "\nthe lowest_prob is: " << lowest_prob << "\nthe highest_prob is: " << highest_prob << std::endl;
+
         for (std::size_t i = 0; i < augmentedcloud->points.size(); ++i) {
 
                 int id = id_point_at_index[i];
-                double threshold = 0.01;
 
-                if (std::abs(mesh_ptr->x[id]) > threshold) {
+                if ((mesh_ptr->triangles[id])->probability - mean < 0) {
                         // yellow 255, 255, 0
                         // from yellow to red
                         augmentedcloud->points[i].r = 255;
-                        augmentedcloud->points[i].g = ( 1 - (std::abs(mesh_ptr->x[id]) - threshold)/(mesh_ptr->highest_state() - threshold) ) * 255;
+                        augmentedcloud->points[i].g = ( 1 - ((mesh_ptr->triangles[id])->probability - mean)/(lowest_prob - mean) ) * 255;
                         augmentedcloud->points[i].b = 0;
 
                 } else {
                         // from yellow to green
-                        augmentedcloud->points[i].r = ( 1 - (std::abs(mesh_ptr->x[id])  - threshold)/(mesh_ptr->lowest_state()  - threshold) ) * 255;
+                        augmentedcloud->points[i].r = ( 1 - ((mesh_ptr->triangles[id])->probability - mean)/(highest_prob - mean) ) * 255;
                         augmentedcloud->points[i].g = 255;
                         augmentedcloud->points[i].b = 0;
                 }
@@ -363,16 +366,10 @@ private:
         pcl::toPCLPointCloud2(*augmentedcloud, pcl_pc2);
         auto new_point_cloud_msg = std::make_shared<sensor_msgs::msg::PointCloud2>();
         pcl_conversions::fromPCL(pcl_pc2, *new_point_cloud_msg);
+
         new_point_cloud_msg->header = msg->header;
+
         publisher_->publish(*new_point_cloud_msg);
-
-        mesh_ptr->generate_state_point_cloud();
-
-        pcl::toPCLPointCloud2(*(mesh_ptr->X_state), pcl_pc2);
-        auto new_point_cloud_msg2 = std::make_shared<sensor_msgs::msg::PointCloud2>();
-        pcl_conversions::fromPCL(pcl_pc2, *new_point_cloud_msg2);
-        new_point_cloud_msg2->header = msg->header;
-        publisher_state->publish(*new_point_cloud_msg2);
 
         // finishing to process the old STL point cloud
         current_STL         = false;
@@ -398,16 +395,21 @@ private:
         for (std::size_t i = 0; i < (std::size_t)cloud.rows(); ++i) { cloud.row(i) *= scale_factor; }
     }
 
-    Eigen::Vector3d vector_from_p_to_p(pcl::PointXYZRGB point1, pcl::PointXYZRGB point2){
-        Eigen::Vector3d diff_vector; 
-        diff_vector << point2.x - point1.x,
-                       point2.y - point1.y,
-                       point2.z - point1.z;
-
-        return diff_vector;
+    float gaussianPDF(float x, float mean, float std) {
+        float exponent = -(std::pow(x - mean, 2) / (2 * std * std));
+        return (1.0f / (std * std::sqrt(2 * M_PI))) * std::exp(exponent);
     }
 
-    float R_i(pcl::PointXYZRGB S){
+    float distance_point_point(pcl::PointXYZRGB point1, pcl::PointXYZRGB point2){
+        Eigen::VectorXf diff_vector(3); 
+        diff_vector << point1.x - point2.x,
+                       point1.y - point2.y,
+                       point1.z - point2.z;
+
+        return diff_vector.norm();
+    }
+
+    float p_of_P_S(pcl::PointXYZRGB P, pcl::PointXYZRGB S){
         //extract camera's z axis direction 
         const auto& orientation = camera_pose->pose.orientation;
         Eigen::Quaterniond quaternion(orientation.w, orientation.x, orientation.y, orientation.z);
@@ -424,11 +426,12 @@ private:
         float Z_dist = from_camera_to_point_vector.dot(axis_direction);
         float std = 0.0184 * std::exp(0.2106 * Z_dist);
 
-        return std * std;
+        float distance = distance_point_point(S, P);
+        return gaussianPDF(distance, 0.0, std);
     }
 
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr subscription_camera_PC;
-    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_, publisher_state;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
     rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr publisher_with_probabilities;
     bool current_STL = false, current_camera_pose = false, first_iteration = true;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscriber_camera, pose_subscriber_STL;
@@ -443,3 +446,16 @@ int main(int argc, char* argv[]) {
     rclcpp::shutdown();
     return 0;
 }
+
+
+/*
+    float multivariateGaussianPDF(const Eigen::Vector3f& X, const Eigen::Vector3f& mean, const Eigen::Matrix3f& covariance) {
+        Eigen::Matrix3f covarianceInverse = covariance.inverse();
+        float detCovariance = covariance.determinant();
+
+        Eigen::Vector3f diff = X - mean;
+        float exponent = -0.5 * diff.transpose() * covarianceInverse * diff;
+
+        return (1.0f / std::pow(2 * M_PI, 1.5) * std::sqrt(detCovariance)) * std::exp(exponent);
+    }
+    */
