@@ -62,7 +62,8 @@ class Optitrack(Node):
 
       self.publisher_.publish(msg)
       self.calls = self.calls + 1
-
+    else:
+      self.get_logger().info('the IDs does not match the selected one')
             
 
 def main(args=None):
