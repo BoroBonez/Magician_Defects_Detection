@@ -41,16 +41,12 @@ class Mesh {
             normal_to_each_face.resize(n_of_triangles);
             x.resize(n_of_triangles);
             P.resize(n_of_triangles, n_of_triangles);
-            Omega.resize(n_of_triangles, n_of_triangles);
-            epsilon.resize(n_of_triangles);
 
             //initialization of the normal direction of each face
             std::vector<int> connectedVertices_id;
             for (std::size_t  i = 0; i < (std::size_t )n_of_triangles; ++i) {
                 x[i] = 0;
-                epsilon[i] = 0;
                 P.insert(i, i) = 0.05 * 0.05;
-                Omega.insert(i, i) = 1/0.05 * 1/0.05;
 
                 Eigen::Vector3d vertex1(V.row(F.row(i)[0])), vertex2(V.row(F.row(i)[1])), vertex3(V.row(F.row(i)[2]));
                 Eigen::Vector3d edge1(vertex1[0] - vertex2[0], vertex1[1] - vertex2[1], vertex1[2] - vertex2[2]);
@@ -64,25 +60,8 @@ class Mesh {
 
         }
 
-        double mean_state(){
-            double mean = 0;
-            for (std::size_t i = 0; i < n_of_triangles; ++i) {
-                mean += x[i];
-            }
-            return mean / n_of_triangles;
-        }
-
-        void uncertainty_domain_from_information_domain(){
-            Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
-            solver.compute(Omega);
-            Eigen::SparseMatrix<double> I(n_of_triangles, n_of_triangles);
-            I.setIdentity();
-            Eigen::SparseMatrix<double> Omega_inverse = solver.solve(I);
-            Omega_inverse.makeCompressed();
-            P = Omega_inverse;
-
-            x = Omega_inverse * epsilon;
-            
+        float h_x(std::size_t index){
+            return x[index];
         }
 
         double lowest_state(){
@@ -136,9 +115,7 @@ class Mesh {
         Eigen::MatrixXd V;
         Eigen::MatrixXi F;
         Eigen::VectorXd x;
-        Eigen::VectorXd epsilon;
         Eigen::SparseMatrix<double>  P;
-        Eigen::SparseMatrix<double>  Omega;
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr X_state;
 };
 
@@ -167,6 +144,11 @@ public:
         publisher_state = this->create_publisher<sensor_msgs::msg::PointCloud2>(
                 "/X", 10
         );
+
+        publisher_with_probabilities =
+                this->create_publisher<std_msgs::msg::Float32MultiArray>(
+                        "/probabilities", 10
+                );
     }
 
 private:
@@ -255,7 +237,7 @@ private:
         max_point = V.colwise().maxCoeff();
 
         pcl::PassThrough<pcl::PointXYZRGB> pass;
-        float step = 0.0;
+        float step = -0.05;
 
         pass.setInputCloud(cloudPC);
         pass.setFilterFieldName("x");
@@ -275,6 +257,7 @@ private:
         //initialization
         if (first_iteration){
             mesh_ptr = std::make_unique<Mesh>(F.rows(), V, F);
+            count.resize(F.rows(), 0);
             first_iteration = false;
         }
         
@@ -283,7 +266,7 @@ private:
         id_point_at_index.clear();
         std::vector<double> dynamicVector_m;
         std::vector<Eigen::RowVectorXd> H_rows;
-        std::vector<double> R_inverse_diagonal;
+        std::vector<double> R_diagonal;
 
         for (std::size_t i = 0; i < cloudPC->points.size(); ++i) {
             Eigen::Vector3d origin(
@@ -302,7 +285,7 @@ private:
             igl::ray_mesh_intersect(origin, direction, V, F, hits);
             if (hits.size() > 0) {
                 // Intersection found
-                //std::cout << "there are still " << cloudPC->points.size() - i << " to analyze\n" << std::endl;
+                std::cout << "there are still " << cloudPC->points.size() - i << " to analyze\n" << std::endl;
                 pcl::PointXYZRGB p;
                 p.x = origin.x() + hits.front().t * direction.x();
                 p.y = origin.y() + hits.front().t * direction.y();
@@ -313,11 +296,12 @@ private:
                 Eigen::RowVectorXd H_row = Eigen::RowVectorXd::Zero(mesh_ptr->n_of_triangles);
                 H_row[hits.front().id] = 1;
                 H_rows.push_back(H_row);
-                R_inverse_diagonal.push_back( 1 / R_i(cloudPC->points[i]) );
+                R_diagonal.push_back( R_i(cloudPC->points[i]) );
 
                 //mesh_ptr->triangles[hits.front().id]->normal_dist_camera = 
                 augmentedcloud->points.push_back(p);
                 id_point_at_index.push_back(hits.front().id);
+                count[hits.front().id]++;
             } 
 
         }
@@ -338,34 +322,54 @@ private:
             }
         }
 
-        // Convert R_inverse_diagonal to a sparse matrix
-        Eigen::SparseMatrix<double> R_inverse(n_hits, n_hits);
+        // Convert R_diagonal to a sparse matrix
+        Eigen::SparseMatrix<double> R(n_hits, n_hits);
         for (size_t i = 0; i < n_hits; ++i) {
-            R_inverse.insert(i, i) = R_inverse_diagonal[i];
+            R.insert(i, i) = R_diagonal[i];
         }
-        //std::cout << "\nThe size of H is: (" << H.rows() << ", " << H.cols() << ")\n" << std::endl;
-        //std::cout << "\nThe size of P is: (" << mesh_ptr->P.rows() << ", " << mesh_ptr->P.cols() << ")\n" << std::endl;
-        //std::cout << "\nThe size of R_inverse is: (" << R_inverse.rows() << ", " << R_inverse.cols() << ")\n" << std::endl;
+        std::cout << "\nThe size of H is: (" << H.rows() << ", " << H.cols() << ")\n" << std::endl;
+        std::cout << "\nThe size of P is: (" << mesh_ptr->P.rows() << ", " << mesh_ptr->P.cols() << ")\n" << std::endl;
+        std::cout << "\nThe size of R is: (" << R.rows() << ", " << R.cols() << ")\n" << std::endl;
         H.makeCompressed();
-        R_inverse.makeCompressed();
+        R.makeCompressed();
 
 
         //Bayesian filter matrices computing
-        mesh_ptr->Omega += (H.transpose() * R_inverse * H).pruned();
-        mesh_ptr->epsilon += H.transpose() * R_inverse * m;
-        if (count % 3 == 0){
-            std::cout << "the "<< count + 1 << "th update is processing \n" << std::endl;
-            mesh_ptr->uncertainty_domain_from_information_domain();
-        }
-        std::cout << "an iteration is done!\n " << std::endl;
-        count++;
 
+        //performing S = H * mesh_ptr->P * H.transpose() + R;
+        Eigen::SparseMatrix<double> middle_step = (mesh_ptr->P * H.transpose()).pruned();
+        middle_step.makeCompressed();
+        Eigen::SparseMatrix<double> S = H * middle_step;
+        S += R;
+        S.makeCompressed();
+        S = S.pruned();
+        std::cout << "\nThe size of S is: (" << S.rows() << ", " << S.cols() << ")\n" << std::endl;
+
+        //perform W = mesh_ptr->P * H.transpose() * S_inverse
+        Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
+        solver.compute(S);
+        Eigen::SparseMatrix<double> I(n_hits,n_hits);
+        I.setIdentity();
+        Eigen::SparseMatrix<double> S_inverse = (solver.solve(I));
+        S_inverse.makeCompressed();
+        std::cout << "\nThe size of S_inverse is: (" << S_inverse.rows() << ", " << S_inverse.cols() << ")\n" << std::endl;
+
+        Eigen::SparseMatrix<double> W =  middle_step * S_inverse;
+        std::cout << "i did matrix W\n" << std::endl;
+
+        //perform mesh_ptr->x = mesh_ptr->x + W * (m - H * mesh_ptr->x);
+        m -= H * mesh_ptr->x;
+        mesh_ptr->x += W * m;
+
+        //mesh_ptr->P = (sparseIdentity - W * H) * mesh_ptr->P;
+        Eigen::SparseMatrix<double> sparseIdentity(mesh_ptr->n_of_triangles, mesh_ptr->n_of_triangles);
+        sparseIdentity.setIdentity();
 
         //set the new color to show the heatmap
-        double threshold = 0.015;
         for (std::size_t i = 0; i < augmentedcloud->points.size(); ++i) {
 
                 int id = id_point_at_index[i];
+                double threshold = 0.01;
 
                 if (std::abs(mesh_ptr->x[id]) > threshold) {
                         // yellow 255, 255, 0
@@ -453,11 +457,12 @@ private:
 
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr subscription_camera_PC;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_, publisher_state;
+    rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr publisher_with_probabilities;
     bool current_STL = false, current_camera_pose = false, first_iteration = true;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscriber_camera, pose_subscriber_STL;
     geometry_msgs::msg::PoseStamped::SharedPtr camera_pose, STL_pose;
+    std::vector<int> count;
     std::unique_ptr<Mesh> mesh_ptr; 
-    std::size_t count = 0;
 };
 
 int main(int argc, char* argv[]) {

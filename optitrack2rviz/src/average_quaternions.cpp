@@ -27,6 +27,7 @@ public:
     M.resize(4, 4);
     average_quaternion.resize(4, 1);
     new_quaternion.resize(4, 1);
+    
   }
 
 private:

@@ -1,0 +1,14 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/matteo/ros2_ws_git/install/realsense2_camera_msgs/local/lib/python3.10/dist-packages",
+        "/home/matteo/ros2_ws_git/install/optitrack_interface/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/matteo/ros2_ws_git/install/realsense2_camera_msgs/local/lib/python3.10/dist-packages",
+        "/home/matteo/ros2_ws_git/install/optitrack_interface/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}

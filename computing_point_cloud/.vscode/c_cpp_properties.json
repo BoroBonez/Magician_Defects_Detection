@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/matteo/ros2_ws_git/install/realsense2_camera/include/**",
+        "/home/matteo/ros2_ws_git/install/realsense2_camera_msgs/include/**",
+        "/home/matteo/ros2_ws_git/install/computing_point_cloud/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/matteo/ros2_ws_git/src/realsense-ros/realsense2_camera/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
